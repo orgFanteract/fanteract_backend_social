@@ -10,60 +10,65 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
+@RestController
+@RequestMapping("/api/hearts")
 class HeartAPI(
     private val heartService: HeartService,
 ) {
-    @LoginRequired
+    //@LoginRequired
     @Operation(summary = "게시글 좋아요 생성")
-    @PostMapping("/{boardId}/heart")
+    @PostMapping("/{boardId}/board")
     fun createHeartInBoard(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<CreateHeartInBoardOuterResponse> {
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         val response = heartService.createHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 게시글 좋아요 취소
-    @LoginRequired
+    //@LoginRequired
     @Operation(summary = "게시글 좋아요 해제")
-    @DeleteMapping("/{boardId}/heart")
+    @DeleteMapping("/{boardId}/board")
     fun deleteHeartInBoard(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<Void> {
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         heartService.deleteHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().build()
     }
 
     // 게시글 좋아요 선택
-    @LoginRequired
+    //@LoginRequired
     @Operation(summary = "코멘트 좋아요 생성")
-    @PostMapping("/{commentId}/heart")
+    @PostMapping("/{commentId}/comment")
     fun createHeartInComment(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<CreateHeartInCommentOuterResponse> {
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         val response = heartService.createHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 게시글 좋아요 취소
-    @LoginRequired
+    //@LoginRequired
     @Operation(summary = "코멘트 좋아요 해제")
-    @DeleteMapping("/{commentId}/heart")
+    @DeleteMapping("/{commentId}/comment")
     fun deleteHeartInComment(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<Void> {
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         heartService.deleteHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().build()

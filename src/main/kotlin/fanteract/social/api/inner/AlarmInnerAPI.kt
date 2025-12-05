@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 @Hidden
@@ -19,14 +20,14 @@ import org.springframework.web.bind.annotation.RestController
 class AlarmInnerAPI(
     private val alarmService: AlarmService,
 ) {
-    @LoginRequired
+    //@LoginRequired
     @PostMapping()
     @Operation(summary = "알람 생성")
     fun create(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @RequestBody createAlarmInnerRequest: CreateAlarmInnerRequest,
     ): ResponseEntity<CreateAlarmInnerResponse>{
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         val response = alarmService.create(
             createAlarmInnerRequest = createAlarmInnerRequest,
             userId = userId,
