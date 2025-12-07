@@ -1,6 +1,8 @@
 package fanteract.social.domain
 
 import fanteract.social.entity.BoardHeart
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import fanteract.social.repo.BoardHeartRepo
 import org.springframework.stereotype.Component
 
@@ -22,7 +24,7 @@ class BoardHeartWriter(
 
     fun delete(userId: Long, boardId: Long) {
         val boardHeart = boardHeartRepo.findByUserIdAndBoardId(userId, boardId)
-            ?: throw NoSuchElementException("조건에 맞는 게시글 좋아요 내용이 존재하지 않습니다")
+            ?: throw ExceptionType.withType(MessageType.NOT_EXIST)
 
         boardHeartRepo.delete(boardHeart)
     }

@@ -14,6 +14,8 @@ import fanteract.social.dto.inner.*
 import fanteract.social.dto.outer.*
 import fanteract.social.entity.CommentHeart
 import fanteract.social.enumerate.*
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import kotlin.collections.map
@@ -37,18 +39,18 @@ class HeartService(
         val user = userClient.findById(userId)
 
         if (user.balance < Balance.HEART.cost){
-            throw kotlin.IllegalArgumentException("비용이 부족합니다")
+            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
         userClient.updateBalance(userId, -Balance.HEART.cost)
 
         // 존재 여부 검증
         if (boardHeartReader.existsByUserIdAndBoardId(userId, boardId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 게시글 좋아요 내용이 이미 존재합니다")
+            throw ExceptionType.withType(MessageType.ALREADY_EXIST)
         }
 
         if (!boardReader.existsById(boardId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         val boardHeart =
@@ -79,7 +81,7 @@ class HeartService(
 
     fun deleteHeartInBoard(boardId: Long, userId: Long) {
         if (!boardReader.existsById(boardId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         // 하트 해제
@@ -100,18 +102,18 @@ class HeartService(
         val user = userClient.findById(userId)
 
         if (user.balance < Balance.HEART.cost){
-            throw kotlin.IllegalArgumentException("비용이 부족합니다")
+            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
         userClient.updateBalance(userId, -Balance.HEART.cost)
 
         // 하트 중복 및 코멘트 존재 여부 검증
         if (commentHeartReader.existsByUserIdAndCommentId(userId, commentId)) {
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트 좋아요 내용이 이미 존재합니다")
+            throw ExceptionType.withType(MessageType.ALREADY_EXIST)
         }
 
         if (!commentReader.existsById(commentId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         val commentHeart =
@@ -142,7 +144,7 @@ class HeartService(
 
     fun deleteHeartInComment(commentId: Long, userId: Long) {
         if (!commentReader.existsById(commentId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         // 하트 삭제
