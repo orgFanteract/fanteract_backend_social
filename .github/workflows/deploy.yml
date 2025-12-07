@@ -1,0 +1,87 @@
+name: CI/CD - fanteract (gitflow)
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feat/**'
+
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  # 1) 공통 빌드/테스트
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (match Dockerfile)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ✅ test 프로필로 H2 기반 테스트 실행
+      - name: Run tests with test profile
+        run: ./gradlew test -Dspring.profiles.active=test
+
+  # 2) develop 에 머지되었을 때만 EC2에 배포
+  deploy-to-dev:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    # ✅ develop 브랜치에 커밋이 생겼을 때만 실행
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            echo ">>> 이동: 프로젝트 디렉토리"
+            cd /home/ubuntu/app/fanteract_backend_social
+
+            echo ">>> 최신 develop 코드 가져오기"
+            git fetch origin
+            git checkout develop || true
+            git pull origin develop
+
+            echo ">>> docker compose down"
+            docker compose down || true
+
+            echo ">>> 기존 이미지 삭제 (없으면 무시)"
+            docker rmi fanteract-social-app:latest || true
+
+            echo ">>> Docker 이미지 빌드 (멀티 스테이지: Gradle bootJar -x test)"
+            docker build -t fanteract-social-app:latest .
+
+            echo ">>> docker compose up -d --build"
+            docker compose up -d --build
+
+            echo ">>> 현재 컨테이너 상태"
+            docker ps
+
+            echo ">>> 배포 완료"
