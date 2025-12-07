@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  social-app:
+    image: fanteract-social-app:latest   # 있으면 이렇게, 없으면 기존 image 이름 유지해도 됨
+    container_name: fanteract-social-app
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      SPRING_APPLICATION_NAME: social-service
+
+      # ✅ RDS 연결 정보 (social 전용 RDS + social_db 스키마)
+      SPRING_DATASOURCE_URL: jdbc:mysql://fanteract-social-db.c32w6yq24ria.ap-northeast-2.rds.amazonaws.com:3306/social_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+
+      # ✅ JPA 설정
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+      # ✅ JWT (Spring이 jwt.secret 으로 매핑)
+      JWT_SECRET: jwtsecretas78dg97d89we4hahsd89we4hahsd89eqwhu4rtihweur489wtbakjwerbjka2q9it4
+
+    ports:
+      - "8080:8080"
+    restart: always
