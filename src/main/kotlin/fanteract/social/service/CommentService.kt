@@ -226,69 +226,11 @@ class CommentService(
         }
 
         commentWriter.delete(commentId = commentId)
-    }
 
-    fun createHeartInComment(commentId: Long, userId: Long): CreateHeartInCommentOuterResponse {
-        // 비용 검증 및 차감
-        val user = userClient.findById(userId)
+        // 연결된 좋아요 삭제
+        val heartList = commentHeartReader.findByCommentIdIn(listOf(commentId))
 
-        if (user.balance < Balance.HEART.cost){
-            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
-        }
-        
-        userClient.updateBalance(userId, -Balance.HEART.cost)
-        
-        // 하트 중복 및 코멘트 존재 여부 검증
-        if (commentHeartReader.existsByUserIdAndCommentId(userId, commentId)) {
-            throw ExceptionType.withType(MessageType.ALREADY_EXIST)
-        }
-
-        if (!commentReader.existsById(commentId)){
-            throw ExceptionType.withType(MessageType.NOT_EXIST)
-        }
-
-        val commentHeart =
-            commentHeartWriter.create(
-                userId = userId,
-                commentId = commentId,
-            )
-
-        // 활동 점수 변경
-        userClient.updateActivePoint(
-            userId = userId,
-            activePoint = ActivePoint.HEART.point
-        )
-
-        // 알림 전송
-        val comment = commentReader.findById(commentId)
-
-        alarmWriter.create(
-            userId = userId,
-            targetUserId = comment.userId,
-            contentType = ContentType.COMMENT_HEART,
-            contentId = commentHeart.commentHeartId,
-            alarmStatus = AlarmStatus.CREATED,
-        )
-
-        return CreateHeartInCommentOuterResponse(commentHeart.commentHeartId)
-    }
-
-    fun deleteHeartInComment(commentId: Long, userId: Long) {
-        if (!commentReader.existsById(commentId)){
-            throw ExceptionType.withType(MessageType.NOT_EXIST)
-        }
-
-        // 하트 삭제
-        commentHeartWriter.delete(
-            userId = userId,
-            commentId = commentId,
-        )
-
-        // 활동 점수 반납
-        userClient.updateActivePoint(
-            userId = userId,
-            activePoint = -ActivePoint.HEART.point
-        )
+        commentHeartWriter.deleteAll(heartList)
     }
 
     fun countByUserId(userId: Long): ReadCommentCountInnerResponse {

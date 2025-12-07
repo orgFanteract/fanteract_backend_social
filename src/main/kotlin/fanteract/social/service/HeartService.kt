@@ -148,7 +148,7 @@ class HeartService(
         }
 
         // 하트 삭제
-        commentHeartWriter.delete(
+        commentHeartWriter.deleteByUserIdAndCommentId(
             userId = userId,
             commentId = commentId,
         )

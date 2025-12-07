@@ -23,11 +23,19 @@ class CommentHeartWriter(
         return commentHeart
     }
 
-    fun delete(userId: Long, commentId: Long) {
+    fun deleteByUserIdAndCommentId(userId: Long, commentId: Long) {
         val commentHeart =
             commentHeartRepo.findByUserIdAndCommentId(userId, commentId)
                 ?: throw ExceptionType.withType(MessageType.NOT_EXIST)
 
         commentHeartRepo.delete(commentHeart)
+    }
+
+    fun delete(heart: CommentHeart){
+        commentHeartRepo.delete(heart)
+    }
+
+    fun deleteAll(heartList: List<CommentHeart>){
+        commentHeartRepo.deleteAll(heartList)
     }
 }
