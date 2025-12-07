@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  social-app:
+    image: fanteract-social-app:latest   # 실제 빌드된 이미지 이름
+    container_name: fanteract-social-app
+
+    environment:
+      # Spring 프로필
+      SPRING_PROFILES_ACTIVE: prod
+
+      # (선택) 정보용 – application.yml과만 맞춰두면 됨
+      SERVER_PORT: 8080
+      SPRING_APPLICATION_NAME: fanteract-social
+
+      # ✅ RDS 연결 정보 (social 전용 RDS + social_db 스키마)
+      SPRING_DATASOURCE_URL: jdbc:mysql://fanteract-social-db.c32w6yq24ria.ap-northeast-2.rds.amazonaws.com:3306/social_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: admin      # 🔧 실제 RDS 유저명으로 변경
+      SPRING_DATASOURCE_PASSWORD: password   # 🔧 실제 RDS 비밀번호로 변경
+
+      # ✅ JWT
+      JWT_SECRET: jwtsecretas78dg97d89we4hahsd89we4hahsd89eqwhu4rtihweur489wtbakjwerbjka2q9it4
+
+      # ✅ account 서비스 호출용 내부 URL
+      ACCOUNT_SERVICE_URL: http://172.31.39.103:8080   # account 서비스 EC2의 private IP:PORT
+
+    ports:
+      - "8080:8080"
+
+    restart: always
