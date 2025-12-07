@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 class AlarmAPI(
     private val alarmService: AlarmService,
 ) {
-    //@LoginRequired
+    
     @Operation(summary = "사용자별 알람 조회")
     @GetMapping()
     fun readAlarmByUserId(
@@ -26,7 +26,7 @@ class AlarmAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadAlarmListOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = alarmService.readAlarmByUserId(userId, page, size)
 
         return ResponseEntity.ok().body(response)

@@ -15,6 +15,8 @@ import fanteract.social.dto.outer.*
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.Balance
 import fanteract.social.enumerate.RiskLevel
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -47,7 +49,7 @@ class BoardService(
         val user = userClient.findById(userId)
         
         if (user.balance < Balance.BOARD.cost){
-            throw kotlin.IllegalArgumentException("비용이 부족합니다")
+            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
         userClient.updateBalance(userId, -Balance.BOARD.cost)
@@ -196,7 +198,7 @@ class BoardService(
         val board = boardReader.findById(boardId)
 
         if (board.riskLevel == RiskLevel.BLOCK){
-            throw NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         val commentList = commentReader.findByBoardIdIn(listOf(board.boardId))
@@ -223,7 +225,7 @@ class BoardService(
         val preBoard = boardReader.findById(boardId)
 
         if (preBoard.userId != userId){
-            throw kotlin.NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         boardWriter
@@ -296,5 +298,32 @@ class BoardService(
             createdAt = board.createdAt!!,
             updatedAt = board.updatedAt!!
         )
+    }
+
+    fun deleteBoard(boardId: Long, userId: Long) {
+        // board 검증
+        val board = boardReader.findById(boardId)
+
+        if (board.userId != userId){
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
+        }
+
+        // board 비활성화
+        boardWriter.delete(board)
+
+        // board 좋아요 삭제
+        val boardHeartList = boardHeartReader.findByBoardIdIn(listOf(boardId))
+
+        boardHeartWriter.deleteAll(boardHeartList)
+
+        // comment 비활성화
+        val commentList = commentReader.findByBoardId(boardId)
+
+        commentWriter.deleteAll(commentList)
+
+        // comment 좋아요 삭제
+        val commentHeartList = commentHeartReader.findByCommentIdIn(commentList.map{it.commentId})
+
+        commentHeartWriter.deleteAll(commentHeartList)
     }
 }

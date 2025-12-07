@@ -2,6 +2,8 @@ package fanteract.social.domain
 
 import fanteract.social.entity.Board
 import fanteract.social.enumerate.RiskLevel
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import fanteract.social.repo.BoardRepo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -23,7 +25,7 @@ class BoardReader(
     }
 
     fun findById(boardId: Long): Board {
-        return boardRepo.findById(boardId).orElseThrow{NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")}
+        return boardRepo.findById(boardId).orElseThrow{ ExceptionType.withType(MessageType.NOT_EXIST)}
     }
 
     fun existsById(boardId: Long): Boolean {

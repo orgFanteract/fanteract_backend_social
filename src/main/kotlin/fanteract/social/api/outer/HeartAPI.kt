@@ -19,56 +19,56 @@ import org.springframework.web.bind.annotation.RestController
 class HeartAPI(
     private val heartService: HeartService,
 ) {
-    //@LoginRequired
+    
     @Operation(summary = "게시글 좋아요 생성")
     @PostMapping("/{boardId}/board")
     fun createHeartInBoard(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<CreateHeartInBoardOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = heartService.createHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 게시글 좋아요 취소
-    //@LoginRequired
+    
     @Operation(summary = "게시글 좋아요 해제")
     @DeleteMapping("/{boardId}/board")
     fun deleteHeartInBoard(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<Void> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         heartService.deleteHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().build()
     }
 
     // 게시글 좋아요 선택
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 좋아요 생성")
     @PostMapping("/{commentId}/comment")
     fun createHeartInComment(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<CreateHeartInCommentOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = heartService.createHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 게시글 좋아요 취소
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 좋아요 해제")
     @DeleteMapping("/{commentId}/comment")
     fun deleteHeartInComment(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<Void> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         heartService.deleteHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().build()

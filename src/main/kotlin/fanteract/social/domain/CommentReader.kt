@@ -3,6 +3,8 @@ package fanteract.social.domain
 import fanteract.social.entity.Comment
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import fanteract.social.repo.CommentRepo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -31,10 +33,10 @@ class CommentReader(
 
     fun findById(commentId: Long): Comment {
         val comment = commentRepo.findById(commentId)
-            .orElseThrow { NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다") }
+            .orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
 
         if (comment.status == Status.DELETED)
-            throw NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
 
         return comment
     }

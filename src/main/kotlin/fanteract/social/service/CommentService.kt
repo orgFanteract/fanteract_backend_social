@@ -18,6 +18,8 @@ import fanteract.social.enumerate.Balance
 import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import fanteract.social.filter.ProfanityFilterService
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -140,13 +142,13 @@ class CommentService(
         val board = boardReader.findById(boardId)
 
         if (board.riskLevel == RiskLevel.BLOCK || board.status == Status.DELETED){
-            throw NoSuchElementException("조건에 맞는 게시글이 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         val user = userClient.findById(userId)
 
         if (user.balance < Balance.COMMENT.cost){
-            throw kotlin.IllegalArgumentException("비용이 부족합니다")
+            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
         userClient.updateBalance(userId, -Balance.COMMENT.cost)
@@ -208,7 +210,7 @@ class CommentService(
         val preComment = commentReader.findById(commentId)
 
         if (preComment.userId != userId) {
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         commentWriter.update(
@@ -220,73 +222,15 @@ class CommentService(
         val preComment = commentReader.findById(commentId)
 
         if (preComment.userId != userId) {
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         commentWriter.delete(commentId = commentId)
-    }
 
-    fun createHeartInComment(commentId: Long, userId: Long): CreateHeartInCommentOuterResponse {
-        // 비용 검증 및 차감
-        val user = userClient.findById(userId)
+        // 연결된 좋아요 삭제
+        val heartList = commentHeartReader.findByCommentIdIn(listOf(commentId))
 
-        if (user.balance < Balance.HEART.cost){
-            throw kotlin.IllegalArgumentException("비용이 부족합니다")
-        }
-        
-        userClient.updateBalance(userId, -Balance.HEART.cost)
-        
-        // 하트 중복 및 코멘트 존재 여부 검증
-        if (commentHeartReader.existsByUserIdAndCommentId(userId, commentId)) {
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트 좋아요 내용이 이미 존재합니다")
-        }
-
-        if (!commentReader.existsById(commentId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
-        }
-
-        val commentHeart =
-            commentHeartWriter.create(
-                userId = userId,
-                commentId = commentId,
-            )
-
-        // 활동 점수 변경
-        userClient.updateActivePoint(
-            userId = userId,
-            activePoint = ActivePoint.HEART.point
-        )
-
-        // 알림 전송
-        val comment = commentReader.findById(commentId)
-
-        alarmWriter.create(
-            userId = userId,
-            targetUserId = comment.userId,
-            contentType = ContentType.COMMENT_HEART,
-            contentId = commentHeart.commentHeartId,
-            alarmStatus = AlarmStatus.CREATED,
-        )
-
-        return CreateHeartInCommentOuterResponse(commentHeart.commentHeartId)
-    }
-
-    fun deleteHeartInComment(commentId: Long, userId: Long) {
-        if (!commentReader.existsById(commentId)){
-            throw kotlin.NoSuchElementException("조건에 맞는 코멘트가 존재하지 않습니다")
-        }
-
-        // 하트 삭제
-        commentHeartWriter.delete(
-            userId = userId,
-            commentId = commentId,
-        )
-
-        // 활동 점수 반납
-        userClient.updateActivePoint(
-            userId = userId,
-            activePoint = -ActivePoint.HEART.point
-        )
+        commentHeartWriter.deleteAll(heartList)
     }
 
     fun countByUserId(userId: Long): ReadCommentCountInnerResponse {
