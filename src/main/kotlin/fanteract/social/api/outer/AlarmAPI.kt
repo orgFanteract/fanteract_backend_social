@@ -8,24 +8,25 @@ import fanteract.social.dto.outer.ReadAlarmListOuterResponse
 import fanteract.social.service.AlarmService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/alarms")
+@RequestMapping("/api/alarms")
 class AlarmAPI(
     private val alarmService: AlarmService,
 ) {
-    @LoginRequired
+    //@LoginRequired
     @Operation(summary = "사용자별 알람 조회")
     @GetMapping()
     fun readAlarmByUserId(
-        request: HttpServletRequest,
+        @RequestHeader("X-User-Id") userId: Long,
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadAlarmListOuterResponse> {
-        val userId = JwtParser.extractKey(request, "userId")
+        //val userId = JwtParser.extractKey(request, "userId")
         val response = alarmService.readAlarmByUserId(userId, page, size)
 
         return ResponseEntity.ok().body(response)
