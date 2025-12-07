@@ -27,7 +27,7 @@ class AlarmInnerAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @RequestBody createAlarmInnerRequest: CreateAlarmInnerRequest,
     ): ResponseEntity<CreateAlarmInnerResponse>{
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = alarmService.create(
             createAlarmInnerRequest = createAlarmInnerRequest,
             userId = userId,

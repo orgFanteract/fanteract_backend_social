@@ -26,7 +26,7 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<CreateHeartInBoardOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = heartService.createHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().body(response)
@@ -40,7 +40,7 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<Void> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         heartService.deleteHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().build()
@@ -54,7 +54,7 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<CreateHeartInCommentOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = heartService.createHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().body(response)
@@ -68,7 +68,7 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<Void> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         heartService.deleteHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().build()

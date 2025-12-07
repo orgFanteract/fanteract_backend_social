@@ -30,7 +30,7 @@ class BoardAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @RequestBody createBoardOuterRequest: CreateBoardOuterRequest,
     ): ResponseEntity<CreateBoardOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = boardService.createBoard(createBoardOuterRequest, userId)
 
         return ResponseEntity.ok().body(response)
@@ -45,7 +45,7 @@ class BoardAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadBoardListOuterResponse> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         val response = boardService.readBoardByUserId(page, size, userId)
 
         return ResponseEntity.ok().body(response)
@@ -88,7 +88,7 @@ class BoardAPI(
         @PathVariable boardId: Long,
         @RequestBody updateBoardOuterRequest: UpdateBoardOuterRequest
     ): ResponseEntity<Void> {
-        //val userId = JwtParser.extractKey(request, "userId")
+        
         boardService.updateBoard(boardId, userId, updateBoardOuterRequest)
 
         return ResponseEntity.ok().build()
