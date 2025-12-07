@@ -299,4 +299,31 @@ class BoardService(
             updatedAt = board.updatedAt!!
         )
     }
+
+    fun deleteBoard(boardId: Long, userId: Long) {
+        // board 검증
+        val board = boardReader.findById(boardId)
+
+        if (board.userId != userId){
+            throw ExceptionType.withType(MessageType.NOT_EXIST)
+        }
+
+        // board 비활성화
+        boardWriter.delete(board)
+
+        // board 좋아요 삭제
+        val boardHeartList = boardHeartReader.findByBoardIdIn(listOf(boardId))
+
+        boardHeartWriter.deleteAll(boardHeartList)
+
+        // comment 비활성화
+        val commentList = commentReader.findByBoardId(boardId)
+
+        commentWriter.deleteAll(commentList)
+
+        // comment 좋아요 삭제
+        val commentHeartList = commentHeartReader.findByCommentIdIn(commentList.map{it.commentId})
+
+        commentHeartWriter.deleteAll(commentHeartList)
+    }
 }

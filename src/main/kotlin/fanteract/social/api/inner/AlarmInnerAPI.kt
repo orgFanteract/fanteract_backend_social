@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 class AlarmInnerAPI(
     private val alarmService: AlarmService,
 ) {
-    //@LoginRequired
+    
     @PostMapping()
     @Operation(summary = "알람 생성")
     fun create(

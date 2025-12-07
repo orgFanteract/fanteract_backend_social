@@ -24,7 +24,7 @@ class CommentAPI(
     private val commentService: CommentService
 ) {
     // 게시글 코멘트 조회
-    //@LoginRequired
+    
     @Operation(summary = "특정 게시글의 코멘트 목록 조회")
     @GetMapping("/{boardId}/board")
     fun readCommentsByBoardId(
@@ -41,7 +41,7 @@ class CommentAPI(
     }
 
     // 특정 유저의 코멘트 조회
-    //@LoginRequired
+    
     @Operation(summary = "사용자가 작성한 코멘트 목록 조회")
     @GetMapping("/user")
     fun readCommentsByUserId(
@@ -59,7 +59,7 @@ class CommentAPI(
     }
 
     // 코멘트 생성
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 생성")
     @PostMapping("/board/{boardId}")
     fun createComment(
@@ -77,7 +77,7 @@ class CommentAPI(
     }
 
     // 코멘트 수정
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 수정")
     @PutMapping("/{commentId}")
     fun updateComment(
@@ -95,7 +95,7 @@ class CommentAPI(
     }
 
     // 코멘트 삭제
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 삭제")
     @DeleteMapping("/{commentId}")
     fun deleteComment(

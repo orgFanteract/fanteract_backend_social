@@ -2,6 +2,7 @@ package fanteract.social.domain
 
 import fanteract.social.entity.Board
 import fanteract.social.enumerate.RiskLevel
+import fanteract.social.enumerate.Status
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.repo.BoardRepo
@@ -36,5 +37,11 @@ class BoardWriter(
         preBoard.content = content
 
         boardRepo.save(preBoard)
+    }
+
+    fun delete(board: Board) {
+        board.status = Status.DELETED
+
+        boardRepo.save(board)
     }
 }

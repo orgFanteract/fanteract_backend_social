@@ -46,4 +46,11 @@ class CommentWriter(
         comment.status = Status.DELETED
         commentRepo.save(comment)
     }
+
+    fun deleteAll(commentList: List<Comment>) {
+        for (comment in commentList){
+            comment.status = Status.DELETED
+            commentRepo.save(comment)
+        }
+    }
 }

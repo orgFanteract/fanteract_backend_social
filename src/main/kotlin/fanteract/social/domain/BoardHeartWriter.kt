@@ -28,4 +28,8 @@ class BoardHeartWriter(
 
         boardHeartRepo.delete(boardHeart)
     }
+
+    fun deleteAll(boardHeartList: List<BoardHeart>) {
+        boardHeartRepo.deleteAll(boardHeartList)
+    }
 }

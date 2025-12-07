@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 class HeartAPI(
     private val heartService: HeartService,
 ) {
-    //@LoginRequired
+    
     @Operation(summary = "게시글 좋아요 생성")
     @PostMapping("/{boardId}/board")
     fun createHeartInBoard(
@@ -33,7 +33,7 @@ class HeartAPI(
     }
 
     // 게시글 좋아요 취소
-    //@LoginRequired
+    
     @Operation(summary = "게시글 좋아요 해제")
     @DeleteMapping("/{boardId}/board")
     fun deleteHeartInBoard(
@@ -47,7 +47,7 @@ class HeartAPI(
     }
 
     // 게시글 좋아요 선택
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 좋아요 생성")
     @PostMapping("/{commentId}/comment")
     fun createHeartInComment(
@@ -61,7 +61,7 @@ class HeartAPI(
     }
 
     // 게시글 좋아요 취소
-    //@LoginRequired
+    
     @Operation(summary = "코멘트 좋아요 해제")
     @DeleteMapping("/{commentId}/comment")
     fun deleteHeartInComment(

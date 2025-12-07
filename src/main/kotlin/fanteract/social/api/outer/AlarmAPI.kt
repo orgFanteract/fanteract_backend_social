@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 class AlarmAPI(
     private val alarmService: AlarmService,
 ) {
-    //@LoginRequired
+    
     @Operation(summary = "사용자별 알람 조회")
     @GetMapping()
     fun readAlarmByUserId(

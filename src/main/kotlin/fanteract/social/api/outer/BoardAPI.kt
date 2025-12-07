@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 class BoardAPI(
     private val boardService: BoardService,
 ) {
-    //@LoginRequired
+    
     @Operation(summary = "게시글 생성")
     @PostMapping()
     fun createBoard(
@@ -37,7 +37,7 @@ class BoardAPI(
     }
 
     // 사용자 작성 게시글 조회
-    //@LoginRequired
+    
     @Operation(summary = "사용자 소유 게시글 조회")
     @GetMapping("/user")
     fun readBoardByUserId(
@@ -52,7 +52,7 @@ class BoardAPI(
     }
 
     // 전체 게시글 조회
-    //@LoginRequired
+    
     @Operation(summary = "전체 게시글 조회")
     @GetMapping("")
     fun readBoard(
@@ -68,7 +68,7 @@ class BoardAPI(
     }
 
     // 특정 게시글 상세 조회
-    //@LoginRequired
+    
     @Operation(summary = "특정 게시글 상세 조회")
     @GetMapping("/{boardId}/board")
     fun readBoardDetail(
@@ -80,7 +80,7 @@ class BoardAPI(
     }
 
     // 게시글 수정
-    //@LoginRequired
+    
     @Operation(summary = "게시글 수정")
     @PutMapping("/{boardId}")
     fun updateBoard(
@@ -90,6 +90,17 @@ class BoardAPI(
     ): ResponseEntity<Void> {
         
         boardService.updateBoard(boardId, userId, updateBoardOuterRequest)
+
+        return ResponseEntity.ok().build()
+    }
+
+    @Operation(summary = "게시글 삭제")
+    @DeleteMapping("/{boardId}")
+    fun deleteBoard(
+        @RequestHeader("X-User-Id") userId: Long,
+        @PathVariable boardId: Long,
+    ): ResponseEntity<Void> {
+        boardService.deleteBoard(boardId, userId)
 
         return ResponseEntity.ok().build()
     }
