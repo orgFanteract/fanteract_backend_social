@@ -1,0 +1,30 @@
+server:
+  port: 0   # 테스트에서는 포트 충돌 방지 위해 0 (랜덤 포트)
+
+spring:
+  application:
+    name: fanteract-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # 테스트는 엔티티 기반으로 자동 생성/삭제
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Flyway/Liquibase 등을 사용 중이라면 테스트에서는 비활성화
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
+
+# 테스트용 더미 JWT 값 (placeholder 해결)
+jwt:
+  secret: dummy-test-secret
