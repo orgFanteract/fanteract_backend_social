@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  social-app:
+    image: fanteract-social-app:latest
+    container_name: fanteract-social-app
+
+    env_file:
+      - .env   # <- 방금 만든 파일
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${SERVER_PORT}
+      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME}
+
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      ACCOUNT_SERVICE_URL: ${ACCOUNT_SERVICE_URL}
+
+    ports:
+      - "8080:8080"
+
+    restart: always
