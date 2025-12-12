@@ -1,6 +1,6 @@
 package fanteract.social.service
 
-import fanteract.social.client.UserClient
+import fanteract.social.client.AccountClient
 import fanteract.social.domain.AlarmReader
 import fanteract.social.domain.AlarmWriter
 import fanteract.social.domain.BoardHeartReader
@@ -44,7 +44,7 @@ class CommentService(
     private val boardHeartWriter: BoardHeartWriter,
     private val commentHeartReader: CommentHeartReader,
     private val commentHeartWriter: CommentHeartWriter,
-    private val userClient: UserClient,
+    private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
 ) {
     fun readCommentsByBoardId(
@@ -62,7 +62,7 @@ class CommentService(
         val commentContent = commentPage.content
 
         val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map {it.commentId}).groupBy { it.commentId }
-        val userMap = userClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
+        val userMap = accountClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
 
         val payload =
             commentContent.map { comment ->
@@ -105,7 +105,7 @@ class CommentService(
         val commentContent = commentPage.content
 
         val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map {it.commentId}).groupBy { it.commentId }
-        val userMap = userClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
+        val userMap = accountClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
 
         val payload =
             commentContent.map { comment ->
@@ -145,13 +145,13 @@ class CommentService(
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
-        val user = userClient.findById(userId)
+        val user = accountClient.findById(userId)
 
         if (user.balance < Balance.COMMENT.cost){
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
-        userClient.updateBalance(userId, -Balance.COMMENT.cost)
+        accountClient.updateBalance(userId, -Balance.COMMENT.cost)
 
         // 게시글 필터링 진행
         val riskLevel =
@@ -171,7 +171,7 @@ class CommentService(
 
         // 활동 점수 변경
         if (riskLevel != RiskLevel.BLOCK) {
-            userClient.updateActivePoint(
+            accountClient.updateActivePoint(
                 userId = userId,
                 activePoint = ActivePoint.COMMENT.point
             )
@@ -285,7 +285,7 @@ class CommentService(
 
     fun findById(commentId: Long): ReadCommentDetailInnerResponse {
         val comment = commentReader.findById(commentId)
-        val user = userClient.findById(comment.userId)
+        val user = accountClient.findById(comment.userId)
         val commentHeartList = commentHeartReader.findByCommentIdIn(listOf(commentId))
 
         return ReadCommentDetailInnerResponse(

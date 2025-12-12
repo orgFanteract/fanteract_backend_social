@@ -1,6 +1,6 @@
 package fanteract.social.service
 
-import fanteract.social.client.UserClient
+import fanteract.social.client.AccountClient
 import fanteract.social.domain.AlarmReader
 import fanteract.social.domain.AlarmWriter
 import fanteract.social.domain.BoardHeartReader
@@ -27,7 +27,7 @@ class HeartService(
     private val boardHeartWriter: BoardHeartWriter,
     private val commentHeartReader: CommentHeartReader,
     private val commentHeartWriter: CommentHeartWriter,
-    private val userClient: UserClient,
+    private val accountClient: AccountClient,
     private val alarmReader: AlarmReader,
     private val alarmWriter: AlarmWriter,
     private val boardReader: BoardReader,
@@ -36,13 +36,13 @@ class HeartService(
 ) {
     fun createHeartInBoard(boardId: Long, userId: Long): CreateHeartInBoardOuterResponse{
         // 비용 검증 및 차감
-        val user = userClient.findById(userId)
+        val user = accountClient.findById(userId)
 
         if (user.balance < Balance.HEART.cost){
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
-        userClient.updateBalance(userId, -Balance.HEART.cost)
+        accountClient.updateBalance(userId, -Balance.HEART.cost)
 
         // 존재 여부 검증
         if (boardHeartReader.existsByUserIdAndBoardId(userId, boardId)){
@@ -60,7 +60,7 @@ class HeartService(
             )
 
         // 활동 점수 변경
-        userClient.updateActivePoint(
+        accountClient.updateActivePoint(
             userId = userId,
             activePoint = ActivePoint.HEART.point
         )
@@ -91,7 +91,7 @@ class HeartService(
         )
 
         // 활동 점수 반납
-        userClient.updateActivePoint(
+        accountClient.updateActivePoint(
             userId = userId,
             activePoint = -ActivePoint.HEART.point
         )
@@ -99,13 +99,13 @@ class HeartService(
 
     fun createHeartInComment(commentId: Long, userId: Long): CreateHeartInCommentOuterResponse {
         // 비용 검증 및 차감
-        val user = userClient.findById(userId)
+        val user = accountClient.findById(userId)
 
         if (user.balance < Balance.HEART.cost){
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
-        userClient.updateBalance(userId, -Balance.HEART.cost)
+        accountClient.updateBalance(userId, -Balance.HEART.cost)
 
         // 하트 중복 및 코멘트 존재 여부 검증
         if (commentHeartReader.existsByUserIdAndCommentId(userId, commentId)) {
@@ -123,7 +123,7 @@ class HeartService(
             )
 
         // 활동 점수 변경
-        userClient.updateActivePoint(
+        accountClient.updateActivePoint(
             userId = userId,
             activePoint = ActivePoint.HEART.point
         )
@@ -154,7 +154,7 @@ class HeartService(
         )
 
         // 활동 점수 반납
-        userClient.updateActivePoint(
+        accountClient.updateActivePoint(
             userId = userId,
             activePoint = -ActivePoint.HEART.point
         )
