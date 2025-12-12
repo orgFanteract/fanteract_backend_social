@@ -1,4 +1,4 @@
-package fanteract.social.domain
+package fanteract.social.adapter
 
 import fanteract.social.entity.Comment
 import fanteract.social.enumerate.RiskLevel
@@ -52,5 +52,9 @@ class CommentWriter(
             comment.status = Status.DELETED
             commentRepo.save(comment)
         }
+    }
+
+    fun deleteByBoardId(boardId: Long) {
+        commentRepo.deleteByBoardIdAndStatus(boardId)
     }
 }

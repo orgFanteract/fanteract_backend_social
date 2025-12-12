@@ -86,6 +86,19 @@ class AccountClient(
         return response?.users ?: emptyList()
     }
 
+    @CircuitBreaker(name = "userClient", fallbackMethod = "debitBalanceIfEnoughFallback")
+    fun debitBalanceIfEnough(userId: Long, cost: Int): UpdateUserDebitIfEnoughInnerResponse {
+        val request = UpdateUserDebitIfEnoughInnerRequest(amount = cost)
+
+        val response = restClient.put()
+            .uri("/internal/users/{userId}/debit", userId)
+            .body(request)
+            .retrieve()
+            .body(UpdateUserDebitIfEnoughInnerResponse::class.java)
+
+        return requireNotNull(response) { "debitIfEnough response is null for userId=$userId" }
+    }
+
     // ===== fallback methods (메서드별 이름 분리) =====
 
     @Suppress("unused")
@@ -124,9 +137,17 @@ class AccountClient(
         throw ExceptionType.withType(MessageType.INVALID_CONNECTED_SERVICE)
     }
 
+    @Suppress("unused")
+    private fun debitBalanceIfEnoughFallback(userId: Long, cost: Int, ex: Throwable): UpdateUserDebitIfEnoughInnerResponse {
+        returnStatus("userClient", ex)
+        throw ExceptionType.withType(MessageType.INVALID_CONNECTED_SERVICE)
+    }
+
     private fun returnStatus(client: String, ex: Throwable) {
         val cb = circuitBreakerRegistry.circuitBreaker(client)
         val state = cb.state
         println("fallback client=$client,ex=${ex::class.qualifiedName}:${ex.message}, state=$state")
     }
+
+
 }

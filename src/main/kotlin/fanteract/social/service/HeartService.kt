@@ -1,21 +1,25 @@
 package fanteract.social.service
 
 import fanteract.social.client.AccountClient
-import fanteract.social.domain.AlarmReader
-import fanteract.social.domain.AlarmWriter
-import fanteract.social.domain.BoardHeartReader
-import fanteract.social.domain.BoardHeartWriter
-import fanteract.social.domain.BoardReader
-import fanteract.social.domain.CommentHeartReader
-import fanteract.social.domain.CommentHeartWriter
-import fanteract.social.domain.CommentReader
-import fanteract.social.domain.CommentWriter
+import fanteract.social.adapter.AlarmReader
+import fanteract.social.adapter.AlarmWriter
+import fanteract.social.adapter.BoardHeartReader
+import fanteract.social.adapter.BoardHeartWriter
+import fanteract.social.adapter.BoardReader
+import fanteract.social.adapter.CommentHeartReader
+import fanteract.social.adapter.CommentHeartWriter
+import fanteract.social.adapter.CommentReader
+import fanteract.social.adapter.CommentWriter
+import fanteract.social.adapter.MessageAdapter
+import fanteract.social.dto.client.CreateAlarmRequest
+import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.inner.*
 import fanteract.social.dto.outer.*
 import fanteract.social.entity.CommentHeart
 import fanteract.social.enumerate.*
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import kotlin.collections.map
@@ -27,6 +31,7 @@ class HeartService(
     private val boardHeartWriter: BoardHeartWriter,
     private val commentHeartReader: CommentHeartReader,
     private val commentHeartWriter: CommentHeartWriter,
+    private val messageAdapter: MessageAdapter,
     private val accountClient: AccountClient,
     private val alarmReader: AlarmReader,
     private val alarmWriter: AlarmWriter,
@@ -35,128 +40,175 @@ class HeartService(
     private val commentWriter: CommentWriter,
 ) {
     fun createHeartInBoard(boardId: Long, userId: Long): CreateHeartInBoardOuterResponse{
-        // 비용 검증 및 차감
-        val user = accountClient.findById(userId)
-
-        if (user.balance < Balance.HEART.cost){
-            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
-        }
-
-        accountClient.updateBalance(userId, -Balance.HEART.cost)
-
-        // 존재 여부 검증
-        if (boardHeartReader.existsByUserIdAndBoardId(userId, boardId)){
-            throw ExceptionType.withType(MessageType.ALREADY_EXIST)
-        }
-
+        // 코멘트 존재 여부 확인
         if (!boardReader.existsById(boardId)){
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
+        // 하트 입력(유니크 인덱스 기반)
         val boardHeart =
-            boardHeartWriter.create(
-                userId = userId,
-                boardId = boardId,
-            )
+            try {
+                boardHeartWriter.create(
+                    userId = userId,
+                    boardId = boardId,
+                    status = Status.PENDING
+                )
+            } catch (e: DataIntegrityViolationException) { // 중복이 발생할 경우
+                throw ExceptionType.withType(MessageType.ALREADY_EXIST)
+            }
 
-        // 활동 점수 변경
-        accountClient.updateActivePoint(
-            userId = userId,
-            activePoint = ActivePoint.HEART.point
+        // 사용자 비용 검증 및 차감
+        try {
+            val debitRes = accountClient.debitBalanceIfEnough(userId, Balance.HEART.cost)
+
+            if (debitRes.response == 0) {
+                boardHeartWriter.delete(boardHeart)
+                throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
+            }
+
+            boardHeartWriter.updateStatus(boardHeart, Status.ACTIVATED)
+        }
+        // 예상된 예외
+        catch (e: ExceptionType) {
+            throw e
+        }
+        // 예상치 못한 예외
+        catch (e: Exception) {
+            boardHeartWriter.delete(boardHeart)
+            throw ExceptionType.withType(MessageType.INVALID_ACTION)
+        }
+
+        // 활동 점수 변경(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                UpdateActivePointRequest(
+                    userId = userId,
+                    activePoint = ActivePoint.HEART.point
+                ),
+            topicService = TopicService.ACCOUNT_SERVICE,
+            methodName = "updateActivePoint"
         )
 
-        val board = boardReader.findById(boardHeart.boardId)
-
-        // 알림 전송
-        alarmWriter.create(
-            userId = userId,
-            targetUserId = board.userId,
-            contentType = ContentType.BOARD_HEART,
-            contentId = boardHeart.boardHeartId,
-            alarmStatus = AlarmStatus.CREATED,
+        // 알람 전송(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                CreateAlarmRequest(
+                    userId = userId,
+                    targetUserId = boardHeart.userId,
+                    contentType = ContentType.BOARD_HEART,
+                    contentId = boardHeart.boardHeartId,
+                    alarmStatus = AlarmStatus.CREATED,
+                ),
+            topicService = TopicService.SOCIAL_SERVICE,
+            methodName = "createAlarm"
         )
+
 
         return CreateHeartInBoardOuterResponse(boardHeart.boardHeartId)
     }
 
     fun deleteHeartInBoard(boardId: Long, userId: Long) {
-        if (!boardReader.existsById(boardId)){
-            throw ExceptionType.withType(MessageType.NOT_EXIST)
-        }
-
         // 하트 해제
-        boardHeartWriter.delete(
+        boardHeartWriter.deleteByUserIdAndBoardId(
             userId = userId,
             boardId = boardId,
         )
 
-        // 활동 점수 반납
-        accountClient.updateActivePoint(
-            userId = userId,
-            activePoint = -ActivePoint.HEART.point
+        // 활동 점수 반납(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                UpdateActivePointRequest(
+                    userId = userId,
+                    activePoint = -ActivePoint.HEART.point
+                ),
+            topicService = TopicService.ACCOUNT_SERVICE,
+            methodName = "updateActivePoint"
         )
     }
 
     fun createHeartInComment(commentId: Long, userId: Long): CreateHeartInCommentOuterResponse {
-        // 비용 검증 및 차감
-        val user = accountClient.findById(userId)
-
-        if (user.balance < Balance.HEART.cost){
-            throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
-        }
-
-        accountClient.updateBalance(userId, -Balance.HEART.cost)
-
-        // 하트 중복 및 코멘트 존재 여부 검증
-        if (commentHeartReader.existsByUserIdAndCommentId(userId, commentId)) {
-            throw ExceptionType.withType(MessageType.ALREADY_EXIST)
-        }
-
+        // 코멘트 존재 여부 확인
         if (!commentReader.existsById(commentId)){
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
+        // 하트 입력(유니크 인덱스 기반)
         val commentHeart =
-            commentHeartWriter.create(
-                userId = userId,
-                commentId = commentId,
-            )
+            try {
+                commentHeartWriter.create(
+                    userId = userId,
+                    commentId = commentId,
+                    status = Status.PENDING
+                )
+            } catch (e: DataIntegrityViolationException) { // 중복이 발생할 경우
+                throw ExceptionType.withType(MessageType.ALREADY_EXIST)
+            }
 
-        // 활동 점수 변경
-        accountClient.updateActivePoint(
-            userId = userId,
-            activePoint = ActivePoint.HEART.point
+        // 사용자 비용 검증 및 차감
+        try {
+            val debitRes = accountClient.debitBalanceIfEnough(userId, Balance.HEART.cost)
+
+            if (debitRes.response == 0) {
+                commentHeartWriter.delete(commentHeart)
+                throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
+            }
+
+            commentHeartWriter.updateStatus(commentHeart, Status.ACTIVATED)
+        }
+        // 예상된 예외
+        catch (e: ExceptionType) {
+            throw e
+        }
+        // 예상치 못한 예외
+        catch (e: Exception) {
+            commentHeartWriter.delete(commentHeart)
+            throw ExceptionType.withType(MessageType.INVALID_ACTION)
+        }
+
+        // 활동 점수 변경(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                UpdateActivePointRequest(
+                    userId = userId,
+                    activePoint = ActivePoint.HEART.point
+                ),
+            topicService = TopicService.ACCOUNT_SERVICE,
+            methodName = "updateActivePoint"
         )
 
-        // 알림 전송
-        val comment = commentReader.findById(commentId)
-
-        alarmWriter.create(
-            userId = userId,
-            targetUserId = comment.userId,
-            contentType = ContentType.COMMENT_HEART,
-            contentId = commentHeart.commentHeartId,
-            alarmStatus = AlarmStatus.CREATED,
+        // 알람 전송(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                CreateAlarmRequest(
+                    userId = userId,
+                    targetUserId = commentHeart.userId,
+                    contentType = ContentType.COMMENT_HEART,
+                    contentId = commentHeart.commentHeartId,
+                    alarmStatus = AlarmStatus.CREATED,
+                ),
+            topicService = TopicService.SOCIAL_SERVICE,
+            methodName = "createAlarm"
         )
 
         return CreateHeartInCommentOuterResponse(commentHeart.commentHeartId)
     }
 
     fun deleteHeartInComment(commentId: Long, userId: Long) {
-        if (!commentReader.existsById(commentId)){
-            throw ExceptionType.withType(MessageType.NOT_EXIST)
-        }
-
         // 하트 삭제
         commentHeartWriter.deleteByUserIdAndCommentId(
             userId = userId,
             commentId = commentId,
         )
 
-        // 활동 점수 반납
-        accountClient.updateActivePoint(
-            userId = userId,
-            activePoint = -ActivePoint.HEART.point
+        // 활동 점수 반납(비동기)
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                UpdateActivePointRequest(
+                    userId = userId,
+                    activePoint = -ActivePoint.HEART.point
+                ),
+            topicService = TopicService.ACCOUNT_SERVICE,
+            methodName = "updateActivePoint"
         )
     }
 

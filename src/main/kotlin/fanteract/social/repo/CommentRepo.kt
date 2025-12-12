@@ -2,10 +2,12 @@ package fanteract.social.repo
 
 import fanteract.social.entity.Comment
 import fanteract.social.enumerate.RiskLevel
+import fanteract.social.enumerate.Status
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -92,4 +94,15 @@ interface CommentRepo : JpaRepository<Comment, Long> {
         @Param("riskLevel") riskLevel: RiskLevel,
         pageable: PageRequest
     ): Page<Comment>
+
+    @Modifying
+    @Query("""
+        update Comment c
+        set c.status = :status
+        where c.boardId = :boardId
+    """)
+    fun deleteByBoardIdAndStatus(
+        @Param("boardId") boardId: Long,
+        @Param("status") status: Status = Status.DELETED
+    ): Int
 }

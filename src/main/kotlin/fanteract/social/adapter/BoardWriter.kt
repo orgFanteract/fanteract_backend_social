@@ -1,4 +1,4 @@
-package fanteract.social.domain
+package fanteract.social.adapter
 
 import fanteract.social.entity.Board
 import fanteract.social.enumerate.RiskLevel

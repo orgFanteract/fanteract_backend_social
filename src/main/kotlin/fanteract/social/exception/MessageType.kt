@@ -7,8 +7,8 @@ enum class MessageType(
     private val message: String,
     private val status: HttpStatus
 ) {
-    NOT_EXIST("NOT_EXIST", "조건에 맞는 대상이 존재하지 않습니다", HttpStatus.BAD_REQUEST),
-    ALREADY_EXIST("ALREADY_EXIST", "조건에 맞는 대상이 이미 존재합니다", HttpStatus.BAD_REQUEST),
+    NOT_EXIST("NOT_EXIST", "조건에 맞는 대상이 존재하지 않습니다", HttpStatus.NOT_FOUND),
+    ALREADY_EXIST("ALREADY_EXIST", "조건에 맞는 대상이 이미 존재합니다", HttpStatus.NOT_FOUND),
     INVALID_TOKEN("INVALID_TOKEN", "조건에 맞는 토큰이 존재하지 않습니다", HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_BALANCE("NOT_ENOUGH_BALANCE", "비용이 부족합니다", HttpStatus.BAD_REQUEST),
     INVALID_ACTION("INVALID_ACTION", "잘못된 행동입니다", HttpStatus.BAD_REQUEST),

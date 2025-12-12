@@ -1,7 +1,7 @@
 package fanteract.social.service
 
-import fanteract.social.domain.AlarmReader
-import fanteract.social.domain.AlarmWriter
+import fanteract.social.adapter.AlarmReader
+import fanteract.social.adapter.AlarmWriter
 import fanteract.social.dto.inner.CreateAlarmInnerRequest
 import fanteract.social.dto.inner.CreateAlarmInnerResponse
 import fanteract.social.dto.outer.ReadAlarmListOuterResponse

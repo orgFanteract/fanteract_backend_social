@@ -1,5 +1,7 @@
 package fanteract.social.dto.client
 
+import fanteract.social.enumerate.AlarmStatus
+import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import java.time.LocalDateTime
 
@@ -33,4 +35,21 @@ data class ReadUserInnerResponse(
 
 data class ReadUserListInnerResponse(
     val users: List<ReadUserInnerResponse>
+)
+
+data class UpdateActivePointRequest(
+    val userId: Long,
+    val activePoint: Int,
+)
+
+data class UpdateUserDebitIfEnoughInnerRequest(
+    val amount: Int,
+)
+
+data class UpdateUserDebitIfEnoughInnerResponse(
+    val response: Int,
+)
+
+data class CreateAlarmResponse(
+    val alarmId: Long,
 )

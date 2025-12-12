@@ -26,7 +26,6 @@ class AlarmAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadAlarmListOuterResponse> {
-        
         val response = alarmService.readAlarmByUserId(userId, page, size)
 
         return ResponseEntity.ok().body(response)

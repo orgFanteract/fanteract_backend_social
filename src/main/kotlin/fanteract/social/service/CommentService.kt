@@ -1,15 +1,17 @@
 package fanteract.social.service
 
 import fanteract.social.client.AccountClient
-import fanteract.social.domain.AlarmReader
-import fanteract.social.domain.AlarmWriter
-import fanteract.social.domain.BoardHeartReader
-import fanteract.social.domain.BoardHeartWriter
-import fanteract.social.domain.BoardReader
-import fanteract.social.domain.CommentHeartReader
-import fanteract.social.domain.CommentHeartWriter
-import fanteract.social.domain.CommentReader
-import fanteract.social.domain.CommentWriter
+import fanteract.social.adapter.AlarmReader
+import fanteract.social.adapter.AlarmWriter
+import fanteract.social.adapter.BoardHeartReader
+import fanteract.social.adapter.BoardHeartWriter
+import fanteract.social.adapter.BoardReader
+import fanteract.social.adapter.CommentHeartReader
+import fanteract.social.adapter.CommentHeartWriter
+import fanteract.social.adapter.CommentReader
+import fanteract.social.adapter.CommentWriter
+import fanteract.social.adapter.MessageAdapter
+import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.outer.*
 import fanteract.social.dto.inner.*
 import fanteract.social.enumerate.ActivePoint
@@ -18,6 +20,7 @@ import fanteract.social.enumerate.Balance
 import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
+import fanteract.social.enumerate.TopicService
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.filter.ProfanityFilterService
@@ -46,6 +49,7 @@ class CommentService(
     private val commentHeartWriter: CommentHeartWriter,
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
+    private val messageAdapter: MessageAdapter,
 ) {
     fun readCommentsByBoardId(
         boardId: Long,
@@ -145,6 +149,7 @@ class CommentService(
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
+        // 사용자 잔액 차감
         val user = accountClient.findById(userId)
 
         if (user.balance < Balance.COMMENT.cost){
@@ -169,15 +174,21 @@ class CommentService(
                 riskLevel = riskLevel,
             )
 
-        // 활동 점수 변경
+        // 활동 점수 변경(비동기)
         if (riskLevel != RiskLevel.BLOCK) {
-            accountClient.updateActivePoint(
-                userId = userId,
-                activePoint = ActivePoint.COMMENT.point
+            messageAdapter.sendMessageUsingBroker(
+                message =
+                    UpdateActivePointRequest(
+                        userId = userId,
+                        activePoint = ActivePoint.HEART.point
+                    ),
+                topicService = TopicService.ACCOUNT_SERVICE,
+                methodName = "updateActivePoint"
             )
         }
 
         // 코멘트 및 게시글 생성자 전체에게 알림 전송
+        // TODO : 비동기 방식으로 진행
         val commentUserList = commentReader.findByBoardId(boardId).map {it.userId}.distinct()
 
         for (commentUserId in commentUserList){
@@ -228,9 +239,7 @@ class CommentService(
         commentWriter.delete(commentId = commentId)
 
         // 연결된 좋아요 삭제
-        val heartList = commentHeartReader.findByCommentIdIn(listOf(commentId))
-
-        commentHeartWriter.deleteAll(heartList)
+        commentHeartWriter.deleteByCommentId(commentId)
     }
 
     fun countByUserId(userId: Long): ReadCommentCountInnerResponse {

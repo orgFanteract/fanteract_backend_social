@@ -30,7 +30,6 @@ class BoardAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @RequestBody createBoardOuterRequest: CreateBoardOuterRequest,
     ): ResponseEntity<CreateBoardOuterResponse> {
-        
         val response = boardService.createBoard(createBoardOuterRequest, userId)
 
         return ResponseEntity.ok().body(response)
@@ -45,14 +44,12 @@ class BoardAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadBoardListOuterResponse> {
-        
         val response = boardService.readBoardByUserId(page, size, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 전체 게시글 조회
-    
     @Operation(summary = "전체 게시글 조회")
     @GetMapping("")
     fun readBoard(
@@ -68,7 +65,6 @@ class BoardAPI(
     }
 
     // 특정 게시글 상세 조회
-    
     @Operation(summary = "특정 게시글 상세 조회")
     @GetMapping("/{boardId}/board")
     fun readBoardDetail(
@@ -80,7 +76,6 @@ class BoardAPI(
     }
 
     // 게시글 수정
-    
     @Operation(summary = "게시글 수정")
     @PutMapping("/{boardId}")
     fun updateBoard(
@@ -88,7 +83,6 @@ class BoardAPI(
         @PathVariable boardId: Long,
         @RequestBody updateBoardOuterRequest: UpdateBoardOuterRequest
     ): ResponseEntity<Void> {
-        
         boardService.updateBoard(boardId, userId, updateBoardOuterRequest)
 
         return ResponseEntity.ok().build()

@@ -1,20 +1,23 @@
 package fanteract.social.service
 
 import fanteract.social.client.AccountClient
-import fanteract.social.domain.BoardHeartReader
-import fanteract.social.domain.BoardHeartWriter
+import fanteract.social.adapter.BoardHeartReader
+import fanteract.social.adapter.BoardHeartWriter
 import fanteract.social.filter.ProfanityFilterService
-import fanteract.social.domain.BoardReader
-import fanteract.social.domain.BoardWriter
-import fanteract.social.domain.CommentHeartReader
-import fanteract.social.domain.CommentHeartWriter
-import fanteract.social.domain.CommentReader
-import fanteract.social.domain.CommentWriter
+import fanteract.social.adapter.BoardReader
+import fanteract.social.adapter.BoardWriter
+import fanteract.social.adapter.CommentHeartReader
+import fanteract.social.adapter.CommentHeartWriter
+import fanteract.social.adapter.CommentReader
+import fanteract.social.adapter.CommentWriter
+import fanteract.social.adapter.MessageAdapter
+import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.inner.*
 import fanteract.social.dto.outer.*
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.Balance
 import fanteract.social.enumerate.RiskLevel
+import fanteract.social.enumerate.TopicService
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import org.springframework.data.domain.PageRequest
@@ -40,6 +43,7 @@ class BoardService(
     private val commentHeartWriter: CommentHeartWriter,
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
+    private val messageAdapter: MessageAdapter,
 ) {
     fun createBoard(
         createBoardOuterRequest: CreateBoardOuterRequest,
@@ -47,7 +51,7 @@ class BoardService(
     ): CreateBoardOuterResponse {
         // 사용자 잔여 포인트 확인
         val user = accountClient.findById(userId)
-        
+
         if (user.balance < Balance.BOARD.cost){
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
@@ -72,9 +76,14 @@ class BoardService(
 
         // 활동 점수 변경
         if (riskLevel != RiskLevel.BLOCK) {
-            accountClient.updateActivePoint(
-                userId = userId,
-                activePoint = ActivePoint.BOARD.point
+            messageAdapter.sendMessageUsingBroker(
+                message =
+                    UpdateActivePointRequest(
+                        userId = userId,
+                        activePoint = ActivePoint.HEART.point
+                    ),
+                topicService = TopicService.ACCOUNT_SERVICE,
+                methodName = "updateActivePoint"
             )
         }
 
@@ -312,18 +321,14 @@ class BoardService(
         boardWriter.delete(board)
 
         // board 좋아요 삭제
-        val boardHeartList = boardHeartReader.findByBoardIdIn(listOf(boardId))
-
-        boardHeartWriter.deleteAll(boardHeartList)
+        boardHeartWriter.deleteByBoardId(boardId)
 
         // comment 비활성화
-        val commentList = commentReader.findByBoardId(boardId)
-
-        commentWriter.deleteAll(commentList)
+        commentWriter.deleteByBoardId(boardId)
 
         // comment 좋아요 삭제
-        val commentHeartList = commentHeartReader.findByCommentIdIn(commentList.map{it.commentId})
+        val commentList = commentReader.findByBoardId(boardId)
 
-        commentHeartWriter.deleteAll(commentHeartList)
+        commentHeartWriter.deleteByCommentIdIn(commentList.map{it.commentId})
     }
 }

@@ -1,9 +1,6 @@
 package fanteract.social.api.outer
 
 import io.swagger.v3.oas.annotations.Operation
-import jakarta.servlet.http.HttpServletRequest
-import fanteract.social.annotation.LoginRequired
-import fanteract.social.config.JwtParser
 import fanteract.social.dto.outer.*
 import fanteract.social.service.HeartService
 import org.springframework.http.ResponseEntity
@@ -47,14 +44,12 @@ class HeartAPI(
     }
 
     // 게시글 좋아요 선택
-    
     @Operation(summary = "코멘트 좋아요 생성")
     @PostMapping("/{commentId}/comment")
     fun createHeartInComment(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<CreateHeartInCommentOuterResponse> {
-        
         val response = heartService.createHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().body(response)
@@ -68,7 +63,6 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<Void> {
-        
         heartService.deleteHeartInComment(commentId, userId)
 
         return ResponseEntity.ok().build()
