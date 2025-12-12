@@ -54,6 +54,9 @@ dependencies {
     // resilience4j
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // kafka
+    implementation("org.springframework.kafka:spring-kafka")
 }
 
 kotlin {

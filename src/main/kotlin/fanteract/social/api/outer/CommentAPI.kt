@@ -2,9 +2,6 @@ package fanteract.social.api.outer
 
 import fanteract.social.service.CommentService
 import io.swagger.v3.oas.annotations.Operation
-import jakarta.servlet.http.HttpServletRequest
-import fanteract.social.annotation.LoginRequired
-import fanteract.social.config.JwtParser
 import fanteract.social.dto.outer.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,7 +21,6 @@ class CommentAPI(
     private val commentService: CommentService
 ) {
     // 게시글 코멘트 조회
-    
     @Operation(summary = "특정 게시글의 코멘트 목록 조회")
     @GetMapping("/{boardId}/board")
     fun readCommentsByBoardId(
@@ -59,7 +55,6 @@ class CommentAPI(
     }
 
     // 코멘트 생성
-    
     @Operation(summary = "코멘트 생성")
     @PostMapping("/board/{boardId}")
     fun createComment(

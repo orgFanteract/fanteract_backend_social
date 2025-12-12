@@ -1,4 +1,4 @@
-package fanteract.social.domain
+package fanteract.social.adapter
 
 import fanteract.social.enumerate.AlarmStatus
 import fanteract.social.enumerate.ContentType

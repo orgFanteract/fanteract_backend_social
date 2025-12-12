@@ -1,4 +1,4 @@
-package fanteract.social.domain
+package fanteract.social.adapter
 
 import fanteract.social.entity.CommentHeart
 import fanteract.social.repo.CommentHeartRepo

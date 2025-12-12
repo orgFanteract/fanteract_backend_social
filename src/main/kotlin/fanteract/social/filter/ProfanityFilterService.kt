@@ -1,7 +1,7 @@
 package fanteract.social.filter
 
 import mu.KotlinLogging
-import fanteract.social.client.UserClient
+import fanteract.social.client.AccountClient
 import fanteract.social.dto.FilterResult
 import fanteract.social.enumerate.RiskLevel
 import org.springframework.stereotype.Service
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 class ProfanityFilterService(
     private val ruleBasedFilter: RuleBasedProfanityFilter,
     private val mlToxicityClient: MlToxicityClient,
-    private val userClient: UserClient,
+    private val accountClient: AccountClient,
     //private val userWriter: UserWriter,
 ) {
     private val log = KotlinLogging.logger {}
@@ -58,7 +58,7 @@ class ProfanityFilterService(
 
         when (filterResult.action) {
             RiskLevel.BLOCK -> {
-                userClient.updateAbusePoint(
+                accountClient.updateAbusePoint(
                     userId = userId,
                     abusePoint = 10
                 )
@@ -67,7 +67,7 @@ class ProfanityFilterService(
             }
 
             RiskLevel.WARN -> {
-                userClient.updateAbusePoint(
+                accountClient.updateAbusePoint(
                     userId = userId,
                     abusePoint = 5
                 )
