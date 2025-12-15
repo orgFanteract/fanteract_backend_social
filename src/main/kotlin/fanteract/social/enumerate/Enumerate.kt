@@ -60,3 +60,11 @@ enum class TopicService{
     CONNECT_SERVICE,
     ACCOUNT_SERVICE,
 }
+
+enum class EventStatus {
+    PROCESS,
+    SUCCESS,
+    FAIL,
+    COMPENSATE,
+}
+
