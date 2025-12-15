@@ -57,4 +57,8 @@ class CommentWriter(
     fun deleteByBoardId(boardId: Long) {
         commentRepo.deleteByBoardIdAndStatus(boardId)
     }
+
+    fun deleteById(commentId: Long) {
+        commentRepo.deleteById(commentId)
+    }
 }

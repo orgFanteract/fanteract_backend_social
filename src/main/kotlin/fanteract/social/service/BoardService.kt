@@ -39,7 +39,6 @@ class BoardService(
     private val commentWriter: CommentWriter,
     private val boardHeartReader: BoardHeartReader,
     private val boardHeartWriter: BoardHeartWriter,
-    private val commentHeartReader: CommentHeartReader,
     private val commentHeartWriter: CommentHeartWriter,
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
@@ -49,7 +48,7 @@ class BoardService(
         createBoardOuterRequest: CreateBoardOuterRequest,
         userId: Long
     ): CreateBoardOuterResponse {
-        // 사용자 잔여 포인트 확인
+        // 사용자 잔여 포인트 확인 및 차감
         val user = accountClient.findById(userId)
 
         if (user.balance < Balance.BOARD.cost){
@@ -74,19 +73,20 @@ class BoardService(
                 riskLevel = riskLevel,
             )
 
-        // 활동 점수 변경
+        // 활동 점수 변경(비동기)
         if (riskLevel != RiskLevel.BLOCK) {
             messageAdapter.sendMessageUsingBroker(
                 message =
                     UpdateActivePointRequest(
                         userId = userId,
-                        activePoint = ActivePoint.HEART.point
+                        activePoint = ActivePoint.BOARD.point
                     ),
                 topicService = TopicService.ACCOUNT_SERVICE,
                 methodName = "updateActivePoint"
             )
         }
 
+        // 결과 반환
         return CreateBoardOuterResponse(
             boardId = board.boardId,
             riskLevel = riskLevel,

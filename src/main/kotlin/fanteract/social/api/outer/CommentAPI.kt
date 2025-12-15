@@ -3,6 +3,7 @@ package fanteract.social.api.outer
 import fanteract.social.service.CommentService
 import io.swagger.v3.oas.annotations.Operation
 import fanteract.social.dto.outer.*
+import fanteract.social.service.CommentEventService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/comments")
 class CommentAPI(
-    private val commentService: CommentService
+    private val commentService: CommentService,
+    private val commentEventService: CommentEventService,
 ) {
     // 게시글 코멘트 조회
     @Operation(summary = "특정 게시글의 코멘트 목록 조회")
@@ -61,14 +63,20 @@ class CommentAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
         @RequestBody createCommentOuterRequest: CreateCommentOuterRequest,
-    ): ResponseEntity<CreateCommentOuterResponse> {
+    ): ResponseEntity<CreateCommentOuterResponse?> {
         
-        val response = commentService.createComment(
+//        val response = commentService.createComment(
+//            boardId = boardId,
+//            userId = userId,
+//            createCommentOuterRequest = createCommentOuterRequest
+//        )
+
+        commentEventService.validateBoardStatusEvent(
             boardId = boardId,
             userId = userId,
             createCommentOuterRequest = createCommentOuterRequest
         )
-        return ResponseEntity.ok().body(response)
+        return ResponseEntity.ok().body(null)
     }
 
     // 코멘트 수정

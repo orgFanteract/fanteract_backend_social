@@ -11,9 +11,12 @@ import fanteract.social.adapter.CommentHeartWriter
 import fanteract.social.adapter.CommentReader
 import fanteract.social.adapter.CommentWriter
 import fanteract.social.adapter.MessageAdapter
+import fanteract.social.dto.client.CreateAlarmListRequest
+import fanteract.social.dto.client.CreateAlarmRequest
 import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.outer.*
 import fanteract.social.dto.inner.*
+import fanteract.social.entity.Comment
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.AlarmStatus
 import fanteract.social.enumerate.Balance
@@ -28,6 +31,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 import kotlin.Long
 import kotlin.collections.associateBy
 import kotlin.collections.count
@@ -137,6 +141,8 @@ class CommentService(
         )
     }
 
+
+
     fun createComment(
         boardId: Long,
         userId: Long,
@@ -180,35 +186,43 @@ class CommentService(
                 message =
                     UpdateActivePointRequest(
                         userId = userId,
-                        activePoint = ActivePoint.HEART.point
+                        activePoint = ActivePoint.COMMENT.point
                     ),
                 topicService = TopicService.ACCOUNT_SERVICE,
                 methodName = "updateActivePoint"
             )
         }
 
-        // 코멘트 및 게시글 생성자 전체에게 알림 전송
-        // TODO : 비동기 방식으로 진행
-        val commentUserList = commentReader.findByBoardId(boardId).map {it.userId}.distinct()
+        // 게시글 내 코멘트 작성자에게 알람 전송(비동기)
+        val commentUserIdList = commentReader.findByBoardId(boardId).map {it.userId}.distinct()
 
-        for (commentUserId in commentUserList){
-            alarmWriter.create(
-                userId = userId,
-                targetUserId = commentUserId,
-                contentType = ContentType.COMMENT,
-                contentId = comment.commentId,
-                alarmStatus = AlarmStatus.CREATED,
-            )
-        }
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                CreateAlarmListRequest(
+                    userId = userId,
+                    targetUserIdList = commentUserIdList,
+                    contentType = ContentType.COMMENT,
+                    contentId = comment.commentId,
+                    alarmStatus = AlarmStatus.CREATED,
+                ),
+            topicService = TopicService.SOCIAL_SERVICE,
+            methodName = "createAlarmList"
+        )
 
+        // 게시글 작성자에게 알람 전송(비동기)
         val boardUserId = boardReader.findById(boardId).userId
 
-        alarmWriter.create(
-            userId = userId,
-            targetUserId = boardUserId,
-            contentType = ContentType.COMMENT,
-            contentId = boardId,
-            alarmStatus = AlarmStatus.CREATED,
+        messageAdapter.sendMessageUsingBroker(
+            message =
+                CreateAlarmRequest(
+                    userId = userId,
+                    targetUserId = boardUserId,
+                    contentType = ContentType.COMMENT,
+                    contentId = comment.commentId,
+                    alarmStatus = AlarmStatus.CREATED,
+                ),
+            topicService = TopicService.SOCIAL_SERVICE,
+            methodName = "createAlarm"
         )
 
         // 반환
@@ -327,4 +341,6 @@ class CommentService(
             contents = payload
         )
     }
+
+
 }
