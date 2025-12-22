@@ -12,6 +12,12 @@ enum class AlarmStatus {
     UPDATED,
 }
 
+enum class WriteStatus {
+    CREATED,
+    DELETED,
+    UPDATED,
+}
+
 enum class ChatroomJoinStatus{
     JOIN,
     LEAVE,
@@ -21,6 +27,7 @@ enum class RiskLevel {
     ALLOW,
     WARN,
     BLOCK,
+    UNKNOWN,
 }
 
 enum class ActivePoint(
@@ -52,7 +59,8 @@ enum class ContentType{
 enum class OutboxStatus{
     NEW,
     SENT,
-    FAILED
+    FAILED,
+    PROCESSING
 }
 
 enum class TopicService{
@@ -68,3 +76,10 @@ enum class EventStatus {
     COMPENSATE,
 }
 
+enum class SagaStatus {
+    RUNNING,
+    SUCCEEDED,
+    FAILED,
+    COMPENSATING,
+    COMPENSATED
+}

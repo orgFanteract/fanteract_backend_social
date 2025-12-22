@@ -14,9 +14,9 @@ import fanteract.social.adapter.MessageAdapter
 import fanteract.social.dto.client.CreateAlarmListRequest
 import fanteract.social.dto.client.CreateAlarmRequest
 import fanteract.social.dto.client.UpdateActivePointRequest
+import fanteract.social.dto.client.WriteCommentForUserRequest
 import fanteract.social.dto.outer.*
 import fanteract.social.dto.inner.*
-import fanteract.social.entity.Comment
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.AlarmStatus
 import fanteract.social.enumerate.Balance
@@ -24,14 +24,16 @@ import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
 import fanteract.social.enumerate.TopicService
+import fanteract.social.enumerate.WriteStatus
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.filter.ProfanityFilterService
+import fanteract.social.orchestrator.CreateCommentOrchestratorV2
+import fanteract.social.util.DeltaInMemoryStorage
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 import kotlin.Long
 import kotlin.collections.associateBy
 import kotlin.collections.count
@@ -54,6 +56,9 @@ class CommentService(
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
     private val messageAdapter: MessageAdapter,
+    private val deltaInMemoryStorage: DeltaInMemoryStorage,
+    private val commentEventService: CommentEventService,
+    private val createCommentOrchestratorV2: CreateCommentOrchestratorV2
 ) {
     fun readCommentsByBoardId(
         boardId: Long,
@@ -141,8 +146,6 @@ class CommentService(
         )
     }
 
-
-
     fun createComment(
         boardId: Long,
         userId: Long,
@@ -202,7 +205,7 @@ class CommentService(
                     userId = userId,
                     targetUserIdList = commentUserIdList,
                     contentType = ContentType.COMMENT,
-                    contentId = comment.commentId,
+                    contentId = comment.boardId,
                     alarmStatus = AlarmStatus.CREATED,
                 ),
             topicService = TopicService.SOCIAL_SERVICE,
@@ -225,12 +228,38 @@ class CommentService(
             methodName = "createAlarm"
         )
 
+        val flag = false
+
+        if (flag){
+            // 카프카 기반 쓰기 행위 메세지 전달
+            messageAdapter.sendMessageUsingBroker(
+                message =
+                    WriteCommentForUserRequest(
+                        userId = userId,
+                        writeStatus = WriteStatus.CREATED,
+                        riskLevel = riskLevel,
+                    ),
+                topicService = TopicService.SOCIAL_SERVICE,
+                methodName = "createCommentForUser"
+            )
+        }
+
+        else {
+            // 값 누적
+            deltaInMemoryStorage.addDelta(userId, "commentCount", 1)
+
+            if (riskLevel == RiskLevel.BLOCK) {
+                deltaInMemoryStorage.addDelta(userId, "restrictedCommentCount", 1)
+            }
+        }
+
         // 반환
         return CreateCommentOuterResponse(
             commentId = comment.commentId,
             riskLevel = riskLevel,
         )
     }
+
     fun updateComment(commentId: Long, userId: Long, updateCommentOuterRequest: UpdateCommentOuterRequest) {
         val preComment = commentReader.findById(commentId)
 
@@ -254,6 +283,32 @@ class CommentService(
 
         // 연결된 좋아요 삭제
         commentHeartWriter.deleteByCommentId(commentId)
+
+        val flag = false
+
+        if (flag){
+            // 카프카 기반 쓰기 행위 메세지 전달
+            messageAdapter.sendMessageUsingBroker(
+                message =
+                    WriteCommentForUserRequest(
+                        userId = userId,
+                        writeStatus = WriteStatus.DELETED,
+                        riskLevel = preComment.riskLevel,
+                    ),
+
+                topicService = TopicService.SOCIAL_SERVICE,
+                methodName = "deleteCommentForUser"
+            )
+        }
+
+        else {
+            // 값 누적
+            deltaInMemoryStorage.addDelta(userId, "commentCount", -1)
+
+            if (preComment.riskLevel == RiskLevel.BLOCK) {
+                deltaInMemoryStorage.addDelta(userId, "restrictedCommentCount", -1)
+            }
+        }
     }
 
     fun countByUserId(userId: Long): ReadCommentCountInnerResponse {
@@ -339,6 +394,30 @@ class CommentService(
 
         return ReadCommentListInnerResponse(
             contents = payload
+        )
+    }
+
+    fun createCommentWithChoreography(
+        boardId: Long,
+        userId: Long,
+        createCommentOuterRequest: CreateCommentOuterRequest
+    ) {
+        commentEventService.validateBoardStatusEvent(
+            boardId = boardId,
+            userId = userId,
+            createCommentOuterRequest = createCommentOuterRequest
+        )
+    }
+
+    fun createCommentWithOrchestrationV2(
+        boardId: Long,
+        userId: Long,
+        createCommentOuterRequest: CreateCommentOuterRequest
+    ) {
+        createCommentOrchestratorV2.start(
+            boardId = boardId,
+            userId = userId,
+            req = createCommentOuterRequest
         )
     }
 

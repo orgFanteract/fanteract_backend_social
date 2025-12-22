@@ -12,14 +12,17 @@ import fanteract.social.adapter.CommentReader
 import fanteract.social.adapter.CommentWriter
 import fanteract.social.adapter.MessageAdapter
 import fanteract.social.dto.client.UpdateActivePointRequest
+import fanteract.social.dto.client.WriteCommentForUserRequest
 import fanteract.social.dto.inner.*
 import fanteract.social.dto.outer.*
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.Balance
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.TopicService
+import fanteract.social.enumerate.WriteStatus
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
+import fanteract.social.util.DeltaInMemoryStorage
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -43,6 +46,7 @@ class BoardService(
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
     private val messageAdapter: MessageAdapter,
+    private val deltaInMemoryStorage: DeltaInMemoryStorage
 ) {
     fun createBoard(
         createBoardOuterRequest: CreateBoardOuterRequest,
@@ -55,7 +59,7 @@ class BoardService(
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
-        accountClient.updateBalance(userId, -Balance.BOARD.cost)
+         accountClient.updateBalance(userId, -Balance.BOARD.cost)
         
         // 게시글 필터링 진행
         val riskLevel =
@@ -85,6 +89,33 @@ class BoardService(
                 methodName = "updateActivePoint"
             )
         }
+
+        val flag = false
+
+        if (flag){
+            // 카프카 기반 쓰기 행위 메세지 전달
+            messageAdapter.sendMessageUsingBroker(
+                message =
+                    WriteCommentForUserRequest(
+                        userId = userId,
+                        writeStatus = WriteStatus.CREATED,
+                        riskLevel = riskLevel,
+                    ),
+                topicService = TopicService.SOCIAL_SERVICE,
+                methodName = "createBoardForUser"
+            )
+        }
+
+        else {
+            // 값 누적
+            deltaInMemoryStorage.addDelta(userId, "boardCount", 1)
+
+            if (riskLevel == RiskLevel.BLOCK) {
+                deltaInMemoryStorage.addDelta(userId, "restrictedBoardCount", -1)
+            }
+        }
+
+
 
         // 결과 반환
         return CreateBoardOuterResponse(

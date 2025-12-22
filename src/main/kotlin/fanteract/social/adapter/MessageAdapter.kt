@@ -54,6 +54,7 @@ class MessageAdapter(
 
         val baseContent = Base64.getEncoder().encodeToString(BaseUtil.toJson(content).toByteArray())
 
+        println("topic = $topicService.$eventName.$eventStatus")
         kafkaTemplate.send(
             "$topicService.$eventName.$eventStatus",
             baseContent

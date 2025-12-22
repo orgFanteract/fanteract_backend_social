@@ -6,7 +6,11 @@ import fanteract.social.enumerate.Status
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.repo.CommentRepo
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @Component
 class CommentWriter(
@@ -18,6 +22,7 @@ class CommentWriter(
         userId: Long,
         content: String,
         riskLevel: RiskLevel,
+        status: Status = Status.ACTIVATED
     ): Comment {
         val comment = Comment(
             boardId = boardId,
@@ -25,6 +30,8 @@ class CommentWriter(
             content = content,
             riskLevel = riskLevel,
         )
+
+        comment.status = status
         return commentRepo.save(comment)
     }
 
@@ -61,4 +68,50 @@ class CommentWriter(
     fun deleteById(commentId: Long) {
         commentRepo.deleteById(commentId)
     }
+
+    fun updateRiskLevel(comment: Comment, riskLevel: RiskLevel) {
+        comment.riskLevel = riskLevel
+        commentRepo.save(comment)
+    }
+
+    fun updateIdempotency(
+        comment: Comment,
+        isFiltered: Boolean = comment.isFiltered,
+        isActivePointApplied: Boolean = comment.isActivePointApplied,
+        isAlarmToBoardUserSent: Boolean = comment.isAlarmToBoardUserSent,
+        isAlarmToCommentUsersSent: Boolean = comment.isAlarmToCommentUsersSent,
+        isCompleted: Boolean = comment.isCompleted,
+    ){
+        comment.isFiltered = isFiltered
+        comment.isActivePointApplied = isActivePointApplied
+        comment.isAlarmToBoardUserSent = isAlarmToBoardUserSent
+        comment.isAlarmToCommentUsersSent = isAlarmToCommentUsersSent
+        comment.isCompleted = isCompleted
+
+        commentRepo.save(comment)
+    }
+
+    fun updateStatus(
+        comment: Comment,
+        status: Status
+    ){
+        comment.status = status
+        commentRepo.save(comment)
+    }
+
+    @Transactional
+    fun tryAcquirePostProcess(commentId: Long): Int{
+        return commentRepo.tryAcquirePostProcess(commentId)
+    }
+
+    @Transactional
+    fun releasePostProcessSuccess(commentId: Long): Int {
+        return commentRepo.releasePostProcessSuccess(commentId)
+    }
+
+    @Transactional
+    fun releasePostProcessFail(commentId: Long, error: String): Int {
+        return commentRepo.releasePostProcessFail(commentId, error)
+    }
+
 }

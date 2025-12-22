@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
 class CommentReader(
@@ -55,5 +56,9 @@ class CommentReader(
 
     fun findByUserIdAndRiskLevel(userId: Long, riskLevel: RiskLevel, pageable: PageRequest): Page<Comment> {
         return commentRepo.findByUserAndRiskLevel(userId, riskLevel, pageable)
+    }
+
+    fun findIncompleteOrStuckComments(stuckBefore: LocalDateTime): List<Comment>{
+        return commentRepo.findIncompleteOrStuckComments(stuckBefore)
     }
 }
