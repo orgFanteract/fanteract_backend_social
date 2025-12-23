@@ -27,7 +27,6 @@ class OutboxPublishForCreateCommentScheduler(
     @Scheduled(fixedDelay = 1000)
     @Transactional
     fun publishOutbox() {
-        println("publishOutbox - createComment")
         val targets =
             outboxSocialRepo.findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(
                 status = OutboxStatus.NEW,

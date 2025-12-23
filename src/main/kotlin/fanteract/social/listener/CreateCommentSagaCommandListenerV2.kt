@@ -8,6 +8,8 @@ import fanteract.social.enumerate.EventStatus
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
 import fanteract.social.enumerate.TopicService
+import fanteract.social.exception.ExceptionType
+import fanteract.social.exception.MessageType
 import fanteract.social.util.BaseUtil
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
@@ -63,12 +65,13 @@ class CreateCommentSagaCommandListenerV2(
         val (sagaId, causationId, payload) = Triple(command.sagaId, command.eventId, command.payload)
 
         try {
-            val comment = commentWriter.create(
-                boardId = payload.boardId,
-                userId = payload.userId,
-                content = payload.content,
-                riskLevel = RiskLevel.UNKNOWN
-            )
+            val comment =
+                commentWriter.create(
+                    boardId = payload.boardId,
+                    userId = payload.userId,
+                    content = payload.content,
+                    riskLevel = RiskLevel.UNKNOWN
+                )
 
             messageAdapter.sendEventUsingBroker(
                 sagaId = sagaId,

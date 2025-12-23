@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.Base64
+import kotlin.random.Random
 
 @Component
 class CreateCommentPostProcessorV2(
@@ -27,16 +28,14 @@ class CreateCommentPostProcessorV2(
     private val messageAdapter: MessageAdapter,
     private val deltaInMemoryStorage: DeltaInMemoryStorage,
 ) {
+
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.CommentCreatedEventV2.SUCCESS"],
         groupId = "social-postprocessor"
     )
     fun onCommentCreatedEvent(message: String) {
         println("onCommentCreatedEvent")
-//        val event = BaseUtil.fromJson<EventWrapper<CommentCreatedEvent>>(
-//            String(Base64.getDecoder().decode(message))
-//        )
-//        val payload = event.payload
+
         val decoded = String(Base64.getDecoder().decode(message))
         val payload = BaseUtil.fromJson<EventWrapper<CommentCreatedEvent>>(decoded).payload
 
@@ -54,7 +53,35 @@ class CreateCommentPostProcessorV2(
         }
     }
 
-    private fun processOneComment(commentId: Long) {
+    @Scheduled(fixedDelay = 300_000)
+    fun retryIncompleteOrStuckComments() {
+        println("retryIncompleteOrStuckComments")
+        val stuckBefore = LocalDateTime.now().minusMinutes(5)
+
+        val targets = commentReader.findIncompleteOrStuckComments(stuckBefore)
+        if (targets.isEmpty())
+            return
+
+        for (comment in targets) {
+            val commentId = comment.commentId
+
+            // 동시 재처리 방지 락 (이미 누가 잡고 있으면 skip)
+            if (commentWriter.tryAcquirePostProcess(commentId) == 0)
+                continue
+
+            try {
+                processOneComment(commentId, true) // 기존 로직 재사용
+                commentWriter.releasePostProcessSuccess(commentId)
+            } catch (e: Exception) {
+                commentWriter.releasePostProcessFail(
+                    commentId,
+                    e.message ?: e::class.java.simpleName
+                )
+            }
+        }
+    }
+
+    private fun processOneComment(commentId: Long, isTrue: Boolean = false) {
         println("processOneComment")
         // 0) 현재 상태 1회 로드
         var comment = commentReader.findById(commentId)
@@ -80,7 +107,7 @@ class CreateCommentPostProcessorV2(
         }
 
         // 사용자 활동 점수 추가
-        if (!comment.isActivePointApplied && comment.riskLevel != RiskLevel.BLOCK) {
+        if (/*(isTrue || randomNumber(0.3)) &&*/ !comment.isActivePointApplied && comment.riskLevel != RiskLevel.BLOCK) {
             messageAdapter.sendMessageUsingBroker(
                 message = UpdateActivePointRequest(
                     userId = comment.userId,
@@ -158,6 +185,11 @@ class CreateCommentPostProcessorV2(
         if (comment.riskLevel == RiskLevel.BLOCK) {
             deltaInMemoryStorage.addDelta(comment.userId, "restrictedCommentCount", 1)
         }
+    }
+
+    fun randomNumber(std: Double): Boolean {
+        val value = Random.nextDouble(0.0, 1.0)
+        return value > std
     }
 }
 

@@ -413,12 +413,15 @@ class CommentService(
         boardId: Long,
         userId: Long,
         createCommentOuterRequest: CreateCommentOuterRequest
-    ) {
-        createCommentOrchestratorV2.start(
-            boardId = boardId,
-            userId = userId,
-            req = createCommentOuterRequest
-        )
+    ): CreateCommentOuterResponseV2 {
+        val response =
+            createCommentOrchestratorV2.start(
+                boardId = boardId,
+                userId = userId,
+                req = createCommentOuterRequest
+            )
+
+        return CreateCommentOuterResponseV2(response)
     }
 
 

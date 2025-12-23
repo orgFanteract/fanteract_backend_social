@@ -17,7 +17,6 @@ class OutboxSnapshotScheduler(
 ) {
     @Scheduled(fixedDelay = 10000)
     fun flushToOutbox() {
-        println("publishOutbox - readMyPage")
         val snapshot = deltaStorage.snapshot()
 
         snapshot.forEach { (userId, fields) ->

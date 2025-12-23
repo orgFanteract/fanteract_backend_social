@@ -137,8 +137,6 @@ class CreateCommentOrchestratorReplierV2(
 
         if (command.payload.success) {
             saga.sagaStatus = SagaStatus.COMPENSATED
-            saga.step = CreateCommentSagaStep.END.name
-            orchestrator.sendRefundCommand(saga, causationId = command.eventId)
         } else {
             saga.sagaStatus = SagaStatus.FAILED
         }

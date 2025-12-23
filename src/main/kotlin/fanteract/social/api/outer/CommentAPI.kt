@@ -64,8 +64,9 @@ class CommentAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
         @RequestBody createCommentOuterRequest: CreateCommentOuterRequest,
-    ): ResponseEntity<CreateCommentOuterResponse?> {
+    ): ResponseEntity<CreateCommentOuterResponseV2> {
         // 사가 - 오케스트레이션 패턴 단축
+        val sagaId =
         commentService.createCommentWithOrchestrationV2(
             boardId = boardId,
             userId = userId,
@@ -86,7 +87,7 @@ class CommentAPI(
             createCommentOuterRequest = createCommentOuterRequest
         )*/
 
-        return ResponseEntity.ok().body(null)
+        return ResponseEntity.ok().body(sagaId)
     }
 
     // 코멘트 수정
