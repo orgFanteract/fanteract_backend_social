@@ -13,6 +13,7 @@ enum class MessageType(
     NOT_ENOUGH_BALANCE("NOT_ENOUGH_BALANCE", "비용이 부족합니다", HttpStatus.BAD_REQUEST),
     INVALID_ACTION("INVALID_ACTION", "잘못된 행동입니다", HttpStatus.BAD_REQUEST),
     INVALID_CONNECTED_SERVICE("INVALID_CONNECTED_SERVICE", "연결된 서비스에 오류가 있습니다", HttpStatus.BAD_REQUEST),
+    BASIC_EXCEPTION("BASIC_EXCEPTION", "테스트를 위한 강제 예외 처리", HttpStatus.BAD_REQUEST),
     ;
 
     fun getCode(): String = this.code

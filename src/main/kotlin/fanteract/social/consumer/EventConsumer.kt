@@ -30,10 +30,9 @@ class EventConsumer(
         groupId = "social-service"
     )
     fun consumeCreateAlarm(message: String){
-        println("consumeCreateAlarm exec")
+        //println("consumeCreateAlarm exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmRequest>>(decodedJson)
-        println(response)
 
         alarmWriter.create(
             userId = response.content.userId,
@@ -49,7 +48,7 @@ class EventConsumer(
         groupId = "social-service"
     )
     fun consumeCreateAlarmList(message: String){
-        println("consumeCreateAlarm exec")
+        //println("consumeCreateAlarmList exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmListRequest>>(decodedJson)
 

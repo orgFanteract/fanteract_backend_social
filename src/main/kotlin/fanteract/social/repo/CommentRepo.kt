@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 interface CommentRepo : JpaRepository<Comment, Long> {
@@ -105,4 +106,51 @@ interface CommentRepo : JpaRepository<Comment, Long> {
         @Param("boardId") boardId: Long,
         @Param("status") status: Status = Status.DELETED
     ): Int
+
+    // post-processing
+    @Modifying
+    @Query("""
+        update Comment c
+           set c.postProcessing = true
+         where c.commentId = :commentId
+           and c.postProcessing = false
+    """)
+    fun tryAcquirePostProcess(commentId: Long): Int
+
+    @Modifying
+    @Query("""
+        update Comment c
+           set c.postProcessing = false,
+               c.postProcessedAt = CURRENT_TIMESTAMP,
+               c.postProcessLastError = null
+         where c.commentId = :commentId
+    """)
+    fun releasePostProcessSuccess(commentId: Long): Int
+
+    @Modifying
+    @Query("""
+        update Comment c
+           set c.postProcessing = false,
+               c.postProcessRetryCount = c.postProcessRetryCount + 1,
+               c.postProcessLastError = :error
+         where c.commentId = :commentId
+    """)
+    fun releasePostProcessFail(commentId: Long, error: String): Int
+
+    // 1. 완료 플레그라 false이며, 후처리 플래그가 false인 comment
+    // 2. 완료 플레그가 false이며, 후처리 시간이 null 5분 이상 경과됐을 경우
+    @Query(
+        """
+        select c
+        from Comment c
+        where c.isCompleted = false
+          and (
+                c.postProcessing = false
+             or (c.postProcessing = true and c.postProcessedAt < :stuckBefore)
+          )
+        """
+    )
+    fun findIncompleteOrStuckComments(
+        @Param("stuckBefore") stuckBefore: LocalDateTime
+    ): List<Comment>
 }

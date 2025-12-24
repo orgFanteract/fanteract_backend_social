@@ -4,6 +4,7 @@ import fanteract.social.service.CommentService
 import io.swagger.v3.oas.annotations.Operation
 import fanteract.social.dto.outer.*
 import fanteract.social.service.CommentEventService
+import org.springframework.data.domain.Window
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -63,20 +64,30 @@ class CommentAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
         @RequestBody createCommentOuterRequest: CreateCommentOuterRequest,
-    ): ResponseEntity<CreateCommentOuterResponse?> {
-        
-//        val response = commentService.createComment(
-//            boardId = boardId,
-//            userId = userId,
-//            createCommentOuterRequest = createCommentOuterRequest
-//        )
-
-        commentEventService.validateBoardStatusEvent(
+    ): ResponseEntity<CreateCommentOuterResponseV2> {
+        // 사가 - 오케스트레이션 패턴 단축
+        val sagaId =
+        commentService.createCommentWithOrchestrationV2(
             boardId = boardId,
             userId = userId,
             createCommentOuterRequest = createCommentOuterRequest
         )
-        return ResponseEntity.ok().body(null)
+
+        // 사가 - 오케스트레이션 패턴
+        /*commentService.createCommentWithOrchestration(
+            boardId = boardId,
+            userId = userId,
+            createCommentOuterRequest = createCommentOuterRequest
+        )*/
+
+        // 사가 - 코레오그래피 패턴
+        /*commentService.createCommentWithChoreography(
+            boardId = boardId,
+            userId = userId,
+            createCommentOuterRequest = createCommentOuterRequest
+        )*/
+
+        return ResponseEntity.ok().body(sagaId)
     }
 
     // 코멘트 수정

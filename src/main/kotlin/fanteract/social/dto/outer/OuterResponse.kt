@@ -53,6 +53,10 @@ data class CreateCommentOuterResponse(
     val riskLevel: RiskLevel,
 )
 
+data class CreateCommentOuterResponseV2(
+    val sagaId: String,
+)
+
 data class CreateHeartInCommentOuterResponse(
     val commentHeartId: Long,
 )
