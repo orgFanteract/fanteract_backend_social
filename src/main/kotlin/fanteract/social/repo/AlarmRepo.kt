@@ -8,9 +8,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AlarmRepo : JpaRepository<Alarm, Long> {
-
     fun findByTargetUserId(
         targetUserId: Long,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Alarm>
 }

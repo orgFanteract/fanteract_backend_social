@@ -1,6 +1,5 @@
 package fanteract.social.service
 
-import fanteract.social.client.AccountClient
 import fanteract.social.adapter.AlarmReader
 import fanteract.social.adapter.AlarmWriter
 import fanteract.social.adapter.BoardHeartReader
@@ -11,12 +10,13 @@ import fanteract.social.adapter.CommentHeartWriter
 import fanteract.social.adapter.CommentReader
 import fanteract.social.adapter.CommentWriter
 import fanteract.social.adapter.MessageAdapter
+import fanteract.social.client.AccountClient
 import fanteract.social.dto.client.CreateAlarmListRequest
 import fanteract.social.dto.client.CreateAlarmRequest
 import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.client.WriteCommentForUserRequest
-import fanteract.social.dto.outer.*
 import fanteract.social.dto.inner.*
+import fanteract.social.dto.outer.*
 import fanteract.social.enumerate.ActivePoint
 import fanteract.social.enumerate.AlarmStatus
 import fanteract.social.enumerate.Balance
@@ -58,24 +58,25 @@ class CommentService(
     private val messageAdapter: MessageAdapter,
     private val deltaInMemoryStorage: DeltaInMemoryStorage,
     private val commentEventService: CommentEventService,
-    private val createCommentOrchestratorV2: CreateCommentOrchestratorV2
+    private val createCommentOrchestratorV2: CreateCommentOrchestratorV2,
 ) {
     fun readCommentsByBoardId(
         boardId: Long,
         page: Int,
-        size: Int
+        size: Int,
     ): ReadCommentPageOuterResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val commentPage = commentReader.findByBoardId(boardId, pageable)
         val commentContent = commentPage.content
 
-        val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map {it.commentId}).groupBy { it.commentId }
-        val userMap = accountClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
+        val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map { it.commentId }).groupBy { it.commentId }
+        val userMap = accountClient.findByIdIn(commentContent.map { it.userId }).associateBy { it.userId }
 
         val payload =
             commentContent.map { comment ->
@@ -86,7 +87,7 @@ class CommentService(
                     commentId = comment.commentId,
                     boardId = comment.boardId,
                     content = comment.content,
-                    heartCount = heart?.count()?: 0,
+                    heartCount = heart?.count() ?: 0,
                     userName = user.email,
                     createdAt = comment.createdAt!!,
                     updatedAt = comment.updatedAt!!,
@@ -99,26 +100,27 @@ class CommentService(
             size = commentPage.size,
             totalElements = commentPage.totalElements,
             totalPages = commentPage.totalPages,
-            hasNext = commentPage.hasNext()
+            hasNext = commentPage.hasNext(),
         )
     }
 
     fun readCommentsByUserId(
         userId: Long,
         page: Int,
-        size: Int
+        size: Int,
     ): ReadCommentPageOuterResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val commentPage = commentReader.findByUserId(userId, pageable)
         val commentContent = commentPage.content
 
-        val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map {it.commentId}).groupBy { it.commentId }
-        val userMap = accountClient.findByIdIn(commentContent.map {it.userId}).associateBy {it.userId }
+        val heartGroup = commentHeartReader.findByCommentIdIn(commentContent.map { it.commentId }).groupBy { it.commentId }
+        val userMap = accountClient.findByIdIn(commentContent.map { it.userId }).associateBy { it.userId }
 
         val payload =
             commentContent.map { comment ->
@@ -129,7 +131,7 @@ class CommentService(
                     commentId = comment.commentId,
                     boardId = comment.boardId,
                     content = comment.content,
-                    heartCount = heart?.count()?: 0,
+                    heartCount = heart?.count() ?: 0,
                     userName = user.email,
                     createdAt = comment.createdAt!!,
                     updatedAt = comment.updatedAt!!,
@@ -142,26 +144,26 @@ class CommentService(
             size = commentPage.size,
             totalElements = commentPage.totalElements,
             totalPages = commentPage.totalPages,
-            hasNext = commentPage.hasNext()
+            hasNext = commentPage.hasNext(),
         )
     }
 
     fun createComment(
         boardId: Long,
         userId: Long,
-        createCommentOuterRequest: CreateCommentOuterRequest
+        createCommentOuterRequest: CreateCommentOuterRequest,
     ): CreateCommentOuterResponse {
         // 게시글 상태 검증
         val board = boardReader.findById(boardId)
 
-        if (board.riskLevel == RiskLevel.BLOCK || board.status == Status.DELETED){
+        if (board.riskLevel == RiskLevel.BLOCK || board.status == Status.DELETED) {
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
         // 사용자 잔액 차감
         val user = accountClient.findById(userId)
 
-        if (user.balance < Balance.COMMENT.cost){
+        if (user.balance < Balance.COMMENT.cost) {
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
@@ -189,15 +191,15 @@ class CommentService(
                 message =
                     UpdateActivePointRequest(
                         userId = userId,
-                        activePoint = ActivePoint.COMMENT.point
+                        activePoint = ActivePoint.COMMENT.point,
                     ),
                 topicService = TopicService.ACCOUNT_SERVICE,
-                methodName = "updateActivePoint"
+                methodName = "updateActivePoint",
             )
         }
 
         // 게시글 내 코멘트 작성자에게 알람 전송(비동기)
-        val commentUserIdList = commentReader.findByBoardId(boardId).map {it.userId}.distinct()
+        val commentUserIdList = commentReader.findByBoardId(boardId).map { it.userId }.distinct()
 
         messageAdapter.sendMessageUsingBroker(
             message =
@@ -209,7 +211,7 @@ class CommentService(
                     alarmStatus = AlarmStatus.CREATED,
                 ),
             topicService = TopicService.SOCIAL_SERVICE,
-            methodName = "createAlarmList"
+            methodName = "createAlarmList",
         )
 
         // 게시글 작성자에게 알람 전송(비동기)
@@ -225,12 +227,12 @@ class CommentService(
                     alarmStatus = AlarmStatus.CREATED,
                 ),
             topicService = TopicService.SOCIAL_SERVICE,
-            methodName = "createAlarm"
+            methodName = "createAlarm",
         )
 
         val flag = false
 
-        if (flag){
+        if (flag) {
             // 카프카 기반 쓰기 행위 메세지 전달
             messageAdapter.sendMessageUsingBroker(
                 message =
@@ -240,11 +242,9 @@ class CommentService(
                         riskLevel = riskLevel,
                     ),
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createCommentForUser"
+                methodName = "createCommentForUser",
             )
-        }
-
-        else {
+        } else {
             // 값 누적
             deltaInMemoryStorage.addDelta(userId, "commentCount", 1)
 
@@ -260,7 +260,11 @@ class CommentService(
         )
     }
 
-    fun updateComment(commentId: Long, userId: Long, updateCommentOuterRequest: UpdateCommentOuterRequest) {
+    fun updateComment(
+        commentId: Long,
+        userId: Long,
+        updateCommentOuterRequest: UpdateCommentOuterRequest,
+    ) {
         val preComment = commentReader.findById(commentId)
 
         if (preComment.userId != userId) {
@@ -272,7 +276,11 @@ class CommentService(
             content = updateCommentOuterRequest.content,
         )
     }
-    fun deleteComment(commentId: Long, userId: Long) {
+
+    fun deleteComment(
+        commentId: Long,
+        userId: Long,
+    ) {
         val preComment = commentReader.findById(commentId)
 
         if (preComment.userId != userId) {
@@ -286,7 +294,7 @@ class CommentService(
 
         val flag = false
 
-        if (flag){
+        if (flag) {
             // 카프카 기반 쓰기 행위 메세지 전달
             messageAdapter.sendMessageUsingBroker(
                 message =
@@ -295,13 +303,10 @@ class CommentService(
                         writeStatus = WriteStatus.DELETED,
                         riskLevel = preComment.riskLevel,
                     ),
-
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "deleteCommentForUser"
+                methodName = "deleteCommentForUser",
             )
-        }
-
-        else {
+        } else {
             // 값 누적
             deltaInMemoryStorage.addDelta(userId, "commentCount", -1)
 
@@ -315,35 +320,42 @@ class CommentService(
         val response = commentReader.countByUserId(userId)
         return ReadCommentCountInnerResponse(response)
     }
-    fun countByUserIdAndRiskLevel(userId: Long, riskLevel: RiskLevel): ReadCommentCountInnerResponse {
+
+    fun countByUserIdAndRiskLevel(
+        userId: Long,
+        riskLevel: RiskLevel,
+    ): ReadCommentCountInnerResponse {
         val response = commentReader.countByUserIdAndRiskLevel(userId, riskLevel)
 
         return ReadCommentCountInnerResponse(response)
     }
+
     fun findByUserIdAndRiskLevel(
         page: Int,
         size: Int,
         userId: Long,
-        riskLevel: RiskLevel
+        riskLevel: RiskLevel,
     ): ReadCommentPageInnerResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val commentPage = commentReader.findByUserIdAndRiskLevel(userId, riskLevel, pageable)
-        val commentContent = commentPage.content.map { comment ->
-            ReadCommentInnerResponse(
-                commentId = comment.commentId,
-                content = comment.content,
-                boardId = comment.boardId,
-                userId = comment.userId,
-                riskLevel = comment.riskLevel,
-                createdAt = comment.createdAt!!,
-                updatedAt = comment.updatedAt!!,
-            )
-        }
+        val commentContent =
+            commentPage.content.map { comment ->
+                ReadCommentInnerResponse(
+                    commentId = comment.commentId,
+                    content = comment.content,
+                    boardId = comment.boardId,
+                    userId = comment.userId,
+                    riskLevel = comment.riskLevel,
+                    createdAt = comment.createdAt!!,
+                    updatedAt = comment.updatedAt!!,
+                )
+            }
 
         return ReadCommentPageInnerResponse(
             contents = commentContent,
@@ -351,7 +363,7 @@ class CommentService(
             size = commentPage.size,
             totalElements = commentPage.totalElements,
             totalPages = commentPage.totalPages,
-            hasNext = commentPage.hasNext()
+            hasNext = commentPage.hasNext(),
         )
     }
 
@@ -380,49 +392,48 @@ class CommentService(
     fun findByBoardIdIn(boardIds: List<Long>): ReadCommentListInnerResponse {
         val commentList = commentReader.findByBoardIdIn(boardIds)
 
-        val payload = commentList.map { comment ->
-            ReadCommentInnerResponse(
-                commentId = comment.commentId,
-                content = comment.content,
-                boardId = comment.boardId,
-                userId = comment.userId,
-                riskLevel = comment.riskLevel,
-                createdAt = comment.createdAt!!,
-                updatedAt = comment.updatedAt!!,
-            )
-        }
+        val payload =
+            commentList.map { comment ->
+                ReadCommentInnerResponse(
+                    commentId = comment.commentId,
+                    content = comment.content,
+                    boardId = comment.boardId,
+                    userId = comment.userId,
+                    riskLevel = comment.riskLevel,
+                    createdAt = comment.createdAt!!,
+                    updatedAt = comment.updatedAt!!,
+                )
+            }
 
         return ReadCommentListInnerResponse(
-            contents = payload
+            contents = payload,
         )
     }
 
     fun createCommentWithChoreography(
         boardId: Long,
         userId: Long,
-        createCommentOuterRequest: CreateCommentOuterRequest
+        createCommentOuterRequest: CreateCommentOuterRequest,
     ) {
         commentEventService.validateBoardStatusEvent(
             boardId = boardId,
             userId = userId,
-            createCommentOuterRequest = createCommentOuterRequest
+            createCommentOuterRequest = createCommentOuterRequest,
         )
     }
 
     fun createCommentWithOrchestrationV2(
         boardId: Long,
         userId: Long,
-        createCommentOuterRequest: CreateCommentOuterRequest
+        createCommentOuterRequest: CreateCommentOuterRequest,
     ): CreateCommentOuterResponseV2 {
         val response =
             createCommentOrchestratorV2.start(
                 boardId = boardId,
                 userId = userId,
-                req = createCommentOuterRequest
+                req = createCommentOuterRequest,
             )
 
         return CreateCommentOuterResponseV2(response)
     }
-
-
 }

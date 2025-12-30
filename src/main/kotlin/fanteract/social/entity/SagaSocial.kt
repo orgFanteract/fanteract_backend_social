@@ -6,7 +6,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "saga_social")
-class SagaSocial (
+class SagaSocial(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
@@ -17,5 +17,4 @@ class SagaSocial (
     @Enumerated(EnumType.STRING)
     val eventStatus: EventStatus,
     val isExec: Boolean = false,
-
-): BaseEntity()
+) : BaseEntity()

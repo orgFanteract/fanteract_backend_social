@@ -6,7 +6,7 @@ import jakarta.persistence.*
 @Entity
 @Table(
     name = "saga_inboxes",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["sagaId", "eventId"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["sagaId", "eventId"])],
 )
 class SagaInbox(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,4 +14,4 @@ class SagaInbox(
     val sagaId: String,
     val eventId: String,
     val eventName: String,
-): BaseEntity()
+) : BaseEntity()

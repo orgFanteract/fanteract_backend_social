@@ -4,7 +4,6 @@ import fanteract.social.entity.constant.BaseEntity
 import fanteract.social.enumerate.SagaStatus
 import jakarta.persistence.*
 
-
 @Entity
 @Table(name = "saga_instance")
 class SagaInstance(
@@ -18,4 +17,4 @@ class SagaInstance(
     var resultJson: String? = null, // 최종 결과
     @Version
     var version: Long? = null,
-): BaseEntity()
+) : BaseEntity()

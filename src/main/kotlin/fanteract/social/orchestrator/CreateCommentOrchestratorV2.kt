@@ -41,17 +41,21 @@ class CreateCommentOrchestratorV2(
     private val outboxSocialWriter: OutboxSocialWriter,
     private val objectMapper: ObjectMapper,
 ) {
-
     // 0번
-    fun start(boardId: Long, userId: Long, req: CreateCommentOuterRequest): String {
+    fun start(
+        boardId: Long,
+        userId: Long,
+        req: CreateCommentOuterRequest,
+    ): String {
         println("start")
         val sagaId = "SAGA-${UUID.randomUUID()}"
 
-        val payload = CreateCommentSaga(
-            boardId = boardId,
-            userId = userId,
-            content = req.content,
-        )
+        val payload =
+            CreateCommentSaga(
+                boardId = boardId,
+                userId = userId,
+                content = req.content,
+            )
         val contextJson = Base64.getEncoder().encodeToString(BaseUtil.toJson(payload).toByteArray())
 
         sagaInstanceRepo.save(
@@ -61,7 +65,7 @@ class CreateCommentOrchestratorV2(
                 sagaStatus = SagaStatus.RUNNING,
                 step = CreateCommentSagaStep.VALIDATE_BOARD_STATUS.name,
                 contextJson = contextJson,
-            )
+            ),
         )
 
         sendValidateBoardStatusCommand(sagaId, boardId)
@@ -69,7 +73,10 @@ class CreateCommentOrchestratorV2(
     }
 
     // 1번 - 게시글 상태 검증
-    fun sendValidateBoardStatusCommand(sagaId: String, boardId: Long) {
+    fun sendValidateBoardStatusCommand(
+        sagaId: String,
+        boardId: Long,
+    ) {
         println("sendValidateBoardStatusCommand")
         messageAdapter.sendEventUsingBroker(
             sagaId = sagaId,
@@ -83,7 +90,10 @@ class CreateCommentOrchestratorV2(
     }
 
     // 2번 - 사용자 잔액 차감
-    fun sendUpdateDebitCommand(saga: SagaInstance, causationId: String) {
+    fun sendUpdateDebitCommand(
+        saga: SagaInstance,
+        causationId: String,
+    ) {
         println("sendUpdateDebitCommand")
         val content = decodeSaga(saga)
 
@@ -94,17 +104,21 @@ class CreateCommentOrchestratorV2(
             causationId = causationId,
             topicService = TopicService.ACCOUNT_SERVICE,
             eventStatus = EventStatus.PROCESS,
-            payload = DebitBalanceCommand(
-                boardId = content.boardId!!,
-                userId = content.userId!!,
-                content = content.content!!,
-                cost = Balance.COMMENT.cost,
-            ),
+            payload =
+                DebitBalanceCommand(
+                    boardId = content.boardId!!,
+                    userId = content.userId!!,
+                    content = content.content!!,
+                    cost = Balance.COMMENT.cost,
+                ),
         )
     }
 
     // 3번 - 임시 댓글 생성
-    fun sendCreateCommentPendingCommand(saga: SagaInstance, causationId: String) {
+    fun sendCreateCommentPendingCommand(
+        saga: SagaInstance,
+        causationId: String,
+    ) {
         println("sendCreateCommentPendingCommand")
         val content = decodeSaga(saga)
 
@@ -115,16 +129,20 @@ class CreateCommentOrchestratorV2(
             causationId = causationId,
             topicService = TopicService.SOCIAL_SERVICE,
             eventStatus = EventStatus.PROCESS,
-            payload = CreateCommentCommand(
-                boardId = content.boardId!!,
-                userId = content.userId!!,
-                content = content.content!!,
-            ),
+            payload =
+                CreateCommentCommand(
+                    boardId = content.boardId!!,
+                    userId = content.userId!!,
+                    content = content.content!!,
+                ),
         )
     }
 
     // 보상 메서드 - 사용자 잔액 반환 (account에 존재)
-    fun sendRefundCommand(saga: SagaInstance, causationId: String) {
+    fun sendRefundCommand(
+        saga: SagaInstance,
+        causationId: String,
+    ) {
         println("sendRefundCommand")
         val content = decodeSaga(saga)
 
@@ -135,15 +153,19 @@ class CreateCommentOrchestratorV2(
             causationId = causationId,
             topicService = TopicService.ACCOUNT_SERVICE,
             eventStatus = EventStatus.PROCESS,
-            payload = RefundBalanceCommand(
-                userId = content.userId!!,
-                cost = content.debitedCost!!,
-            ),
+            payload =
+                RefundBalanceCommand(
+                    userId = content.userId!!,
+                    cost = content.debitedCost!!,
+                ),
         )
     }
 
     // 사가 탈출 메서드 -> ProcessorV2
-    fun publishCommentCreatedEvent(saga: SagaInstance, causationId: String) {
+    fun publishCommentCreatedEvent(
+        saga: SagaInstance,
+        causationId: String,
+    ) {
         println("publishCommentCreatedEvent")
         val content = decodeSaga(saga)
 
@@ -157,17 +179,16 @@ class CreateCommentOrchestratorV2(
                     boardId = content.boardId!!,
                     userId = content.userId!!,
                     content = content.content!!,
-                )
+                ),
             )
 
         outboxSocialWriter.create(
             topic = "SOCIAL_SERVICE.CommentCreatedEventV2.SUCCESS",
             content = payload,
             outboxStatus = OutboxStatus.NEW,
-            methodName = "createComment"
+            methodName = "createComment",
         )
     }
-
 
     private fun decodeSaga(saga: SagaInstance): CreateCommentSaga {
         val decodedJson = String(Base64.getDecoder().decode(saga.contextJson))
@@ -175,6 +196,7 @@ class CreateCommentOrchestratorV2(
         return command
     }
 }
+
 data class CommentCreatedSender(
     val sagaId: String,
     val causationId: String? = null,
@@ -183,6 +205,7 @@ data class CommentCreatedSender(
     val userId: Long,
     val content: String,
 )
+
 enum class CreateCommentSagaStep {
     VALIDATE_BOARD_STATUS,
     UPDATE_DEBIT,

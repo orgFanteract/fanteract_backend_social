@@ -11,12 +11,17 @@ import org.springframework.stereotype.Component
 class SagaSocialReader(
     private val sagaSocialRepo: SagaSocialRepo,
 ) {
-    fun findBySagaIdAndEventNameAndEventStatus(sagaId: String, eventName: String, eventStatus: EventStatus): SagaSocial {
-        return sagaSocialRepo.findBySagaIdAndEventNameAndEventStatus(sagaId, eventName, eventStatus).firstOrNull()
+    fun findBySagaIdAndEventNameAndEventStatus(
+        sagaId: String,
+        eventName: String,
+        eventStatus: EventStatus,
+    ): SagaSocial =
+        sagaSocialRepo.findBySagaIdAndEventNameAndEventStatus(sagaId, eventName, eventStatus).firstOrNull()
             ?: throw ExceptionType.withType(MessageType.NOT_EXIST)
-    }
 
-    fun existsBySagaIdAndEventNameAndEventStatus(sagaId: String, eventName: String, eventStatus: EventStatus): Boolean {
-        return sagaSocialRepo.existsBySagaIdAndEventNameAndEventStatus(sagaId, eventName, eventStatus)
-    }
+    fun existsBySagaIdAndEventNameAndEventStatus(
+        sagaId: String,
+        eventName: String,
+        eventStatus: EventStatus,
+    ): Boolean = sagaSocialRepo.existsBySagaIdAndEventNameAndEventStatus(sagaId, eventName, eventStatus)
 }

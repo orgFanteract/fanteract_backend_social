@@ -17,13 +17,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ExceptionType::class)
     fun handleBusinessException(
         e: ExceptionType,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
-        val body = ErrorResponse(
-            code = e.type.getCode(),
-            message = e.message,
-            //path = request.requestURI
-        )
+        val body =
+            ErrorResponse(
+                code = e.type.getCode(),
+                message = e.message,
+                // path = request.requestURI
+            )
         return ResponseEntity.status(e.type.getStatus()).body(body)
     }
 
@@ -31,13 +32,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleMethodNotAllowed(
         e: HttpRequestMethodNotSupportedException,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
-        val body = ErrorResponse(
-            code = "METHOD_NOT_ALLOWED",
-            message = "허용되지 않은 HTTP 메서드입니다.",
-            //path = request.requestURI
-        )
+        val body =
+            ErrorResponse(
+                code = "METHOD_NOT_ALLOWED",
+                message = "허용되지 않은 HTTP 메서드입니다.",
+                // path = request.requestURI
+            )
         return ResponseEntity.status(405).body(body)
     }
 
@@ -45,13 +47,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException::class)
     fun handleNotFound(
         e: NoHandlerFoundException,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
-        val body = ErrorResponse(
-            code = "NOT_FOUND",
-            message = "요청한 경로가 존재하지 않습니다.",
-            //path = request.requestURI
-        )
+        val body =
+            ErrorResponse(
+                code = "NOT_FOUND",
+                message = "요청한 경로가 존재하지 않습니다.",
+                // path = request.requestURI
+            )
         return ResponseEntity.status(404).body(body)
     }
 
@@ -59,13 +62,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
     fun handleTypeMismatch(
         e: MethodArgumentTypeMismatchException,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
-        val body = ErrorResponse(
-            code = "INVALID_PARAMETER",
-            message = "잘못된 파라미터 값입니다. ${e.name}=${e.value}",
-            //path = request.requestURI
-        )
+        val body =
+            ErrorResponse(
+                code = "INVALID_PARAMETER",
+                message = "잘못된 파라미터 값입니다. ${e.name}=${e.value}",
+                // path = request.requestURI
+            )
         return ResponseEntity.status(400).body(body)
     }
 
@@ -73,13 +77,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(Exception::class)
     fun handleAllException(
         e: Exception,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
-        val body = ErrorResponse(
-            code = "INTERNAL_SERVER_ERROR",
-            message = e.message ?: "서버 내부 오류가 발생했습니다.",
-            //path = request.requestURI
-        )
+        val body =
+            ErrorResponse(
+                code = "INTERNAL_SERVER_ERROR",
+                message = e.message ?: "서버 내부 오류가 발생했습니다.",
+                // path = request.requestURI
+            )
         return ResponseEntity.status(500).body(body)
     }
 }

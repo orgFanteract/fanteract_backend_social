@@ -1,9 +1,7 @@
 package fanteract.social.service
 
-import fanteract.social.client.AccountClient
 import fanteract.social.adapter.BoardHeartReader
 import fanteract.social.adapter.BoardHeartWriter
-import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.adapter.BoardReader
 import fanteract.social.adapter.BoardWriter
 import fanteract.social.adapter.CommentHeartReader
@@ -11,6 +9,7 @@ import fanteract.social.adapter.CommentHeartWriter
 import fanteract.social.adapter.CommentReader
 import fanteract.social.adapter.CommentWriter
 import fanteract.social.adapter.MessageAdapter
+import fanteract.social.client.AccountClient
 import fanteract.social.dto.client.UpdateActivePointRequest
 import fanteract.social.dto.client.WriteCommentForUserRequest
 import fanteract.social.dto.inner.*
@@ -22,6 +21,7 @@ import fanteract.social.enumerate.TopicService
 import fanteract.social.enumerate.WriteStatus
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
+import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.util.DeltaInMemoryStorage
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -46,21 +46,21 @@ class BoardService(
     private val accountClient: AccountClient,
     private val profanityFilterService: ProfanityFilterService,
     private val messageAdapter: MessageAdapter,
-    private val deltaInMemoryStorage: DeltaInMemoryStorage
+    private val deltaInMemoryStorage: DeltaInMemoryStorage,
 ) {
     fun createBoard(
         createBoardOuterRequest: CreateBoardOuterRequest,
-        userId: Long
+        userId: Long,
     ): CreateBoardOuterResponse {
         // 사용자 잔여 포인트 확인 및 차감
         val user = accountClient.findById(userId)
 
-        if (user.balance < Balance.BOARD.cost){
+        if (user.balance < Balance.BOARD.cost) {
             throw ExceptionType.withType(MessageType.NOT_ENOUGH_BALANCE)
         }
 
-         accountClient.updateBalance(userId, -Balance.BOARD.cost)
-        
+        accountClient.updateBalance(userId, -Balance.BOARD.cost)
+
         // 게시글 필터링 진행
         val riskLevel =
             profanityFilterService.checkProfanityAndUpdateAbusePoint(
@@ -83,39 +83,19 @@ class BoardService(
                 message =
                     UpdateActivePointRequest(
                         userId = userId,
-                        activePoint = ActivePoint.BOARD.point
+                        activePoint = ActivePoint.BOARD.point,
                     ),
                 topicService = TopicService.ACCOUNT_SERVICE,
-                methodName = "updateActivePoint"
+                methodName = "updateActivePoint",
             )
         }
 
-        val flag = false
+        // 값 누적
+        deltaInMemoryStorage.addDelta(userId, "boardCount", 1)
 
-        if (flag){
-            // 카프카 기반 쓰기 행위 메세지 전달
-            messageAdapter.sendMessageUsingBroker(
-                message =
-                    WriteCommentForUserRequest(
-                        userId = userId,
-                        writeStatus = WriteStatus.CREATED,
-                        riskLevel = riskLevel,
-                    ),
-                topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createBoardForUser"
-            )
+        if (riskLevel == RiskLevel.BLOCK) {
+            deltaInMemoryStorage.addDelta(userId, "restrictedBoardCount", -1)
         }
-
-        else {
-            // 값 누적
-            deltaInMemoryStorage.addDelta(userId, "boardCount", 1)
-
-            if (riskLevel == RiskLevel.BLOCK) {
-                deltaInMemoryStorage.addDelta(userId, "restrictedBoardCount", -1)
-            }
-        }
-
-
 
         // 결과 반환
         return CreateBoardOuterResponse(
@@ -124,29 +104,33 @@ class BoardService(
         )
     }
 
-    fun readBoardByUserId(page: Int, size: Int, userId: Long): ReadBoardListOuterResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+    fun readBoardByUserId(
+        page: Int,
+        size: Int,
+        userId: Long,
+    ): ReadBoardListOuterResponse {
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val boardPage = boardReader.readByUserId(pageable, userId)
         val boardContent = boardPage.content
 
         val commentGroup =
             commentReader
-                .findByBoardIdIn(boardContent.map {it.boardId})
+                .findByBoardIdIn(boardContent.map { it.boardId })
                 .groupBy { it.boardId }
 
         val heartGroup =
             boardHeartReader
-                .findByBoardIdIn(boardContent.map {it.boardId})
-                .groupBy {it.boardId }
+                .findByBoardIdIn(boardContent.map { it.boardId })
+                .groupBy { it.boardId }
 
         val userMap =
-            accountClient.findByIdIn(boardContent.map {it.userId}).associateBy { it.userId }
-
+            accountClient.findByIdIn(boardContent.map { it.userId }).associateBy { it.userId }
 
         val payload =
             boardContent.map { board ->
@@ -172,36 +156,40 @@ class BoardService(
             size = size,
             totalElements = boardPage.totalElements,
             totalPages = boardPage.totalPages,
-            hasNext = boardPage.hasNext()
+            hasNext = boardPage.hasNext(),
         )
     }
 
-    fun readBoard(page: Int, size: Int): ReadBoardListOuterResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+    fun readBoard(
+        page: Int,
+        size: Int,
+    ): ReadBoardListOuterResponse {
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val boardPage =
             boardReader.findAllExceptBlock(
-                pageable = pageable
+                pageable = pageable,
             )
 
         val boardContent = boardPage.content
 
         val commentGroup =
             commentReader
-                .findByBoardIdIn(boardContent.map {it.boardId})
+                .findByBoardIdIn(boardContent.map { it.boardId })
                 .groupBy { it.boardId }
 
         val heartGroup =
             boardHeartReader
-                .findByBoardIdIn(boardContent.map {it.boardId})
-                .groupBy {it.boardId }
+                .findByBoardIdIn(boardContent.map { it.boardId })
+                .groupBy { it.boardId }
 
         val userMap =
-            accountClient.findByIdIn(boardContent.map {it.userId}).associateBy { it.userId }
+            accountClient.findByIdIn(boardContent.map { it.userId }).associateBy { it.userId }
 
         val payload =
             boardContent.map { board ->
@@ -221,23 +209,20 @@ class BoardService(
                 )
             }
 
-
         return ReadBoardListOuterResponse(
             contents = payload,
             page = page,
             size = size,
             totalElements = boardPage.totalElements,
             totalPages = boardPage.totalPages,
-            hasNext = boardPage.hasNext()
+            hasNext = boardPage.hasNext(),
         )
     }
 
-    fun readBoardDetail(
-        boardId: Long
-    ): ReadBoardDetailOuterResponse {
+    fun readBoardDetail(boardId: Long): ReadBoardDetailOuterResponse {
         val board = boardReader.findById(boardId)
 
-        if (board.riskLevel == RiskLevel.BLOCK){
+        if (board.riskLevel == RiskLevel.BLOCK) {
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
@@ -260,11 +245,11 @@ class BoardService(
     fun updateBoard(
         boardId: Long,
         userId: Long,
-        updateBoardOuterRequest: UpdateBoardOuterRequest
+        updateBoardOuterRequest: UpdateBoardOuterRequest,
     ) {
         val preBoard = boardReader.findById(boardId)
 
-        if (preBoard.userId != userId){
+        if (preBoard.userId != userId) {
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
@@ -281,28 +266,39 @@ class BoardService(
         return ReadBoardCountInnerResponse(response)
     }
 
-    fun countByUserIdAndRiskLevel(userId: Long, riskLevel: RiskLevel): ReadBoardCountInnerResponse {
+    fun countByUserIdAndRiskLevel(
+        userId: Long,
+        riskLevel: RiskLevel,
+    ): ReadBoardCountInnerResponse {
         val response = boardReader.countByUserIdAndRiskLevel(userId, riskLevel)
 
         return ReadBoardCountInnerResponse(response)
     }
-    fun findByUserIdAndRiskLevel(page: Int, size: Int, userId: Long, riskLevel: RiskLevel): ReadBoardPageInnerResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt")
-        )
+
+    fun findByUserIdAndRiskLevel(
+        page: Int,
+        size: Int,
+        userId: Long,
+        riskLevel: RiskLevel,
+    ): ReadBoardPageInnerResponse {
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+            )
 
         val boardPage = boardReader.findByUserIdAndRiskLevel(userId, riskLevel, pageable)
-        val boardList = boardPage.content.map { board ->
-            ReadBoardInnerResponse(
-                boardId = board.boardId,
-                title = board.title,
-                content = board.content,
-                userId = board.userId,
-                riskLevel = board.riskLevel,
-            )
-        }
+        val boardList =
+            boardPage.content.map { board ->
+                ReadBoardInnerResponse(
+                    boardId = board.boardId,
+                    title = board.title,
+                    content = board.content,
+                    userId = board.userId,
+                    riskLevel = board.riskLevel,
+                )
+            }
 
         val response =
             ReadBoardPageInnerResponse(
@@ -311,7 +307,7 @@ class BoardService(
                 size = size,
                 totalElements = boardPage.totalElements,
                 totalPages = boardPage.totalPages,
-                hasNext = boardPage.hasNext()
+                hasNext = boardPage.hasNext(),
             )
 
         return response
@@ -322,6 +318,7 @@ class BoardService(
 
         return ReadBoardExistsInnerResponse(response)
     }
+
     fun findById(boardId: Long): ReadBoardDetailInnerResponse {
         val board = boardReader.findById(boardId)
         val user = accountClient.findById(board.userId)
@@ -336,15 +333,18 @@ class BoardService(
             commentCount = commentList.size,
             heartCount = heartList.size,
             createdAt = board.createdAt!!,
-            updatedAt = board.updatedAt!!
+            updatedAt = board.updatedAt!!,
         )
     }
 
-    fun deleteBoard(boardId: Long, userId: Long) {
+    fun deleteBoard(
+        boardId: Long,
+        userId: Long,
+    ) {
         // board 검증
         val board = boardReader.findById(boardId)
 
-        if (board.userId != userId){
+        if (board.userId != userId) {
             throw ExceptionType.withType(MessageType.NOT_EXIST)
         }
 
@@ -360,6 +360,6 @@ class BoardService(
         // comment 좋아요 삭제
         val commentList = commentReader.findByBoardId(boardId)
 
-        commentHeartWriter.deleteByCommentIdIn(commentList.map{it.commentId})
+        commentHeartWriter.deleteByCommentIdIn(commentList.map { it.commentId })
     }
 }

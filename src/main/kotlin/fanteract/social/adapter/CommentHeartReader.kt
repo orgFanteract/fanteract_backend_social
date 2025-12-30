@@ -8,13 +8,15 @@ import org.springframework.stereotype.Component
 class CommentHeartReader(
     private val commentHeartRepo: CommentHeartRepo,
 ) {
-    fun findByCommentIdIn(idList: List<Long>): List<CommentHeart> {
-        return commentHeartRepo.findByCommentIdIn(idList)
-    }
+    fun findByCommentIdIn(idList: List<Long>): List<CommentHeart> = commentHeartRepo.findByCommentIdIn(idList)
 
-    fun existsByUserIdAndCommentId(userId: Long, commentId: Long): Boolean {
-        return commentHeartRepo.existsByUserIdAndCommentId(userId, commentId)
-    }
+    fun existsByUserIdAndCommentId(
+        userId: Long,
+        commentId: Long,
+    ): Boolean = commentHeartRepo.existsByUserIdAndCommentId(userId, commentId)
 
-    fun existsByUserIdAndBoardId(userId: Long, commentId: Long) {}
+    fun existsByUserIdAndBoardId(
+        userId: Long,
+        commentId: Long,
+    ) {}
 }

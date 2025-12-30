@@ -15,127 +15,152 @@ import java.time.LocalDateTime
 
 @Repository
 interface CommentRepo : JpaRepository<Comment, Long> {
-
-    @Query("""
+    @Query(
+        """
         SELECT c
         FROM Comment c
         WHERE c.boardId = :boardId
           AND c.status = 'ACTIVATED'
           AND c.riskLevel <> 'BLOCK'
-    """)
+    """,
+    )
     fun findByBoardId(
         @Param("boardId") boardId: Long,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Comment>
 
-    @Query("""
+    @Query(
+        """
         SELECT c
         FROM Comment c
         WHERE c.boardId = :boardId
           AND c.status = 'ACTIVATED'
           AND c.riskLevel <> 'BLOCK'
-    """)
+    """,
+    )
     fun findByBoardId(
         @Param("boardId") boardId: Long,
     ): List<Comment>
 
-    @Query("""
+    @Query(
+        """
         SELECT c
         FROM Comment c
         WHERE c.userId = :userId
           AND c.status = 'ACTIVATED'
           AND c.riskLevel <> 'BLOCK'
-    """)
+    """,
+    )
     fun findByUserId(
         @Param("userId") userId: Long,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Comment>
 
-    @Query("""
+    @Query(
+        """
         SELECT c
         FROM Comment c
         WHERE c.boardId IN :idList
           AND c.status = 'ACTIVATED'
           AND c.riskLevel <> 'BLOCK'
-    """)
+    """,
+    )
     fun findByBoardIdIn(
-        @Param("idList") idList: List<Long>
+        @Param("idList") idList: List<Long>,
     ): List<Comment>
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(c)
         FROM Comment c
         WHERE c.userId = :userId
           AND c.status = 'ACTIVATED'
-    """)
-    fun countByUserId(@Param("userId") userId: Long): Long
+    """,
+    )
+    fun countByUserId(
+        @Param("userId") userId: Long,
+    ): Long
 
-
-    @Query("""
+    @Query(
+        """
     SELECT COUNT(c)
     FROM Comment c
     WHERE c.userId = :userId
       AND c.riskLevel = :riskLevel
       AND c.status = 'ACTIVATED'
-""")
+""",
+    )
     fun countByUserIdAndRiskLevel(
         @Param("userId") userId: Long,
-        @Param("riskLevel") riskLevel: RiskLevel
+        @Param("riskLevel") riskLevel: RiskLevel,
     ): Long
 
-    @Query("""
+    @Query(
+        """
         SELECT c
         FROM Comment c
         WHERE c.userId = :userId
           AND c.riskLevel = :riskLevel
           AND c.status = 'ACTIVATED'
-    """)
+    """,
+    )
     fun findByUserAndRiskLevel(
         @Param("userId") userId: Long,
         @Param("riskLevel") riskLevel: RiskLevel,
-        pageable: PageRequest
+        pageable: PageRequest,
     ): Page<Comment>
 
     @Modifying
-    @Query("""
+    @Query(
+        """
         update Comment c
         set c.status = :status
         where c.boardId = :boardId
-    """)
+    """,
+    )
     fun deleteByBoardIdAndStatus(
         @Param("boardId") boardId: Long,
-        @Param("status") status: Status = Status.DELETED
+        @Param("status") status: Status = Status.DELETED,
     ): Int
 
     // post-processing
     @Modifying
-    @Query("""
+    @Query(
+        """
         update Comment c
            set c.postProcessing = true
          where c.commentId = :commentId
            and c.postProcessing = false
-    """)
+    """,
+    )
     fun tryAcquirePostProcess(commentId: Long): Int
 
     @Modifying
-    @Query("""
+    @Query(
+        """
         update Comment c
            set c.postProcessing = false,
                c.postProcessedAt = CURRENT_TIMESTAMP,
                c.postProcessLastError = null
          where c.commentId = :commentId
-    """)
+    """,
+    )
     fun releasePostProcessSuccess(commentId: Long): Int
 
     @Modifying
-    @Query("""
+    @Query(
+        """
         update Comment c
            set c.postProcessing = false,
                c.postProcessRetryCount = c.postProcessRetryCount + 1,
                c.postProcessLastError = :error
          where c.commentId = :commentId
-    """)
-    fun releasePostProcessFail(commentId: Long, error: String): Int
+    """,
+    )
+    fun releasePostProcessFail(
+        commentId: Long,
+        error: String,
+    ): Int
 
     // 1. 완료 플레그라 false이며, 후처리 플래그가 false인 comment
     // 2. 완료 플레그가 false이며, 후처리 시간이 null 5분 이상 경과됐을 경우
@@ -148,9 +173,9 @@ interface CommentRepo : JpaRepository<Comment, Long> {
                 c.postProcessing = false
              or (c.postProcessing = true and c.postProcessedAt < :stuckBefore)
           )
-        """
+        """,
     )
     fun findIncompleteOrStuckComments(
-        @Param("stuckBefore") stuckBefore: LocalDateTime
+        @Param("stuckBefore") stuckBefore: LocalDateTime,
     ): List<Comment>
 }

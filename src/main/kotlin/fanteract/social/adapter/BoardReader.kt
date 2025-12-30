@@ -14,33 +14,27 @@ import org.springframework.stereotype.Component
 class BoardReader(
     private val boardRepo: BoardRepo,
 ) {
-    fun readByUserId(pageable: Pageable, userId: Long): Page<Board> {
-        return boardRepo.findByUserId(userId, pageable)
-    }
+    fun readByUserId(
+        pageable: Pageable,
+        userId: Long,
+    ): Page<Board> = boardRepo.findByUserId(userId, pageable)
 
-    fun findAllExceptBlock(
-        pageable: Pageable
-    ): Page<Board> {
-        return boardRepo.findAllByRiskLevelNot(RiskLevel.BLOCK, pageable)
-    }
+    fun findAllExceptBlock(pageable: Pageable): Page<Board> = boardRepo.findAllByRiskLevelNot(RiskLevel.BLOCK, pageable)
 
-    fun findById(boardId: Long): Board {
-        return boardRepo.findById(boardId).orElseThrow{ ExceptionType.withType(MessageType.NOT_EXIST)}
-    }
+    fun findById(boardId: Long): Board = boardRepo.findById(boardId).orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
 
-    fun existsById(boardId: Long): Boolean {
-        return boardRepo.existsById(boardId)
-    }
+    fun existsById(boardId: Long): Boolean = boardRepo.existsById(boardId)
 
-    fun countByUserId(userId: Long): Long {
-        return boardRepo.countByUserId(userId)
-    }
+    fun countByUserId(userId: Long): Long = boardRepo.countByUserId(userId)
 
-    fun countByUserIdAndRiskLevel(userId: Long, riskLevel: RiskLevel): Long {
-        return boardRepo.countByUserIdAndRiskLevel(userId, riskLevel)
-    }
+    fun countByUserIdAndRiskLevel(
+        userId: Long,
+        riskLevel: RiskLevel,
+    ): Long = boardRepo.countByUserIdAndRiskLevel(userId, riskLevel)
 
-    fun findByUserIdAndRiskLevel(userId: Long, riskLevel: RiskLevel, pageable: PageRequest): Page<Board> {
-        return boardRepo.findByUserAndRiskLevel(userId, riskLevel, pageable)
-    }
+    fun findByUserIdAndRiskLevel(
+        userId: Long,
+        riskLevel: RiskLevel,
+        pageable: PageRequest,
+    ): Page<Board> = boardRepo.findByUserAndRiskLevel(userId, riskLevel, pageable)
 }

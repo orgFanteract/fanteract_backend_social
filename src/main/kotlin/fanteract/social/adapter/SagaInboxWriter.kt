@@ -12,13 +12,16 @@ class SagaInboxWriter(
 ) {
     // 여기서 유니크 중복 발생한 경험 있음 -> 카프카 재전송 때문인듯
     @Transactional
-    fun acceptOnce(sagaId: String, eventId: String, eventName: String): Boolean {
-        return try {
+    fun acceptOnce(
+        sagaId: String,
+        eventId: String,
+        eventName: String,
+    ): Boolean =
+        try {
             sagaInboxRepository.save(SagaInbox(sagaId = sagaId, eventId = eventId, eventName = eventName))
             sagaInboxRepository.flush()
             true
         } catch (e: DataIntegrityViolationException) {
             false
         }
-    }
 }

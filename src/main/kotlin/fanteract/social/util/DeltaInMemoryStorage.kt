@@ -9,7 +9,11 @@ class DeltaInMemoryStorage {
     private val store =
         ConcurrentHashMap<Long, ConcurrentHashMap<String, AtomicLong>>()
 
-    fun addDelta(userId: Long, field: String, delta: Long) {
+    fun addDelta(
+        userId: Long,
+        field: String,
+        delta: Long,
+    ) {
         store
             .computeIfAbsent(userId) { ConcurrentHashMap() }
             .computeIfAbsent(field) { AtomicLong(0) }
@@ -31,7 +35,11 @@ class DeltaInMemoryStorage {
         return result
     }
 
-    fun subtract(userId: Long, field: String, value: Long) {
+    fun subtract(
+        userId: Long,
+        field: String,
+        value: Long,
+    ) {
         val counter = store[userId]?.get(field) ?: return
         counter.addAndGet(-value)
     }

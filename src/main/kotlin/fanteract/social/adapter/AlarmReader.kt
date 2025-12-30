@@ -10,11 +10,8 @@ import org.springframework.stereotype.Component
 class AlarmReader(
     private val alarmRepo: AlarmRepo,
 ) {
-
     fun findByTargetUserId(
         targetUserId: Long,
-        pageable: Pageable
-    ): Page<Alarm> {
-        return alarmRepo.findByTargetUserId(targetUserId, pageable)
-    }
+        pageable: Pageable,
+    ): Page<Alarm> = alarmRepo.findByTargetUserId(targetUserId, pageable)
 }

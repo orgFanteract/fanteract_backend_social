@@ -9,20 +9,27 @@ import org.springframework.stereotype.Component
 class BoardHeartWriter(
     private val boardHeartRepo: BoardHeartRepo,
 ) {
-    fun create(userId: Long, boardId: Long, status: Status = Status.ACTIVATED): BoardHeart {
+    fun create(
+        userId: Long,
+        boardId: Long,
+        status: Status = Status.ACTIVATED,
+    ): BoardHeart {
         val boardHeart =
             boardHeartRepo.save(
                 BoardHeart(
                     userId = userId,
                     boardId = boardId,
-                )
+                ),
             )
         boardHeart.status = status
 
         return boardHeart
     }
 
-    fun deleteByUserIdAndBoardId(userId: Long, boardId: Long) {
+    fun deleteByUserIdAndBoardId(
+        userId: Long,
+        boardId: Long,
+    ) {
         boardHeartRepo.deleteByUserIdAndBoardId(userId, boardId)
     }
 
@@ -34,7 +41,10 @@ class BoardHeartWriter(
         boardHeartRepo.delete(boardHeart)
     }
 
-    fun updateStatus(boardHeart: BoardHeart, status: Status) {
+    fun updateStatus(
+        boardHeart: BoardHeart,
+        status: Status,
+    ) {
         boardHeart.status = status
         boardHeartRepo.save(boardHeart)
     }

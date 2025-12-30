@@ -6,12 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface SagaSocialRepo: JpaRepository<SagaSocial, Long> {
+interface SagaSocialRepo : JpaRepository<SagaSocial, Long> {
     fun findBySagaIdAndEventNameAndEventStatus(
         sagaId: String,
         eventName: String,
-        eventStatus: EventStatus
+        eventStatus: EventStatus,
     ): List<SagaSocial>
 
-    fun existsBySagaIdAndEventNameAndEventStatus(sagaId: String, eventName: String, eventStatus: fanteract.social.enumerate.EventStatus): Boolean
+    fun existsBySagaIdAndEventNameAndEventStatus(
+        sagaId: String,
+        eventName: String,
+        eventStatus: fanteract.social.enumerate.EventStatus,
+    ): Boolean
 }

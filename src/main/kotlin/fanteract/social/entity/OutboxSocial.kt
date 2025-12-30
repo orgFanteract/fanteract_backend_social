@@ -12,14 +12,13 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.util.UUID
 
-
 @Entity
 @Table(
     name = "outbox_social",
     indexes = [
         Index(name = "idx_outbox_status_created", columnList = "outbox_status, created_at"),
         Index(name = "idx_outbox_event_id", columnList = "event_id", unique = true),
-    ]
+    ],
 )
 data class OutboxSocial(
     @Id
@@ -31,4 +30,4 @@ data class OutboxSocial(
     @Enumerated(EnumType.STRING)
     var outboxStatus: OutboxStatus,
     val methodName: String,
-): BaseEntity()
+) : BaseEntity()

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.Base64
 
-
 @Transactional
 @Service
 class CreateCommentOrchestratorReplierV2(
@@ -23,19 +22,21 @@ class CreateCommentOrchestratorReplierV2(
     // 1번 - 게시글 상태 검증
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.ValidateBoardStatusReplyV2.SUCCESS", "SOCIAL_SERVICE.ValidateBoardStatusReplyV2.FAIL"],
-        groupId = "social-orchestrator"
+        groupId = "social-orchestrator",
     )
     fun onValidateBoardStatusReply(message: String) {
         println("onValidateBoardStatusReplyV2")
         val command = BaseUtil.fromJson<EventWrapper<ValidateBoardStatusReply>>(String(Base64.getDecoder().decode(message)))
 
-        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "ValidateBoardStatusReplyV2"))
+        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "ValidateBoardStatusReplyV2")) {
             return
+        }
 
         val saga = sagaInstanceRepo.findById(command.sagaId).orElseThrow()
-        
-        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.VALIDATE_BOARD_STATUS.name)
+
+        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.VALIDATE_BOARD_STATUS.name) {
             return
+        }
 
         if (command.payload.success) {
             saga.step = CreateCommentSagaStep.UPDATE_DEBIT.name
@@ -51,19 +52,21 @@ class CreateCommentOrchestratorReplierV2(
     // 2번 - 사용자 잔액 차감
     @KafkaListener(
         topics = ["ACCOUNT_SERVICE.UpdateDebitReplyV2.SUCCESS", "ACCOUNT_SERVICE.UpdateDebitReplyV2.FAIL"],
-        groupId = "social-orchestrator"
+        groupId = "social-orchestrator",
     )
     fun onDebitReply(message: String) {
         println("onDebitReplyV2")
         val command = BaseUtil.fromJson<EventWrapper<DebitBalanceReply>>(String(Base64.getDecoder().decode(message)))
 
-        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "UpdateDebitReplyV2"))
+        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "UpdateDebitReplyV2")) {
             return
+        }
 
         val saga = sagaInstanceRepo.findById(command.sagaId).orElseThrow()
 
-        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.UPDATE_DEBIT.name)
+        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.UPDATE_DEBIT.name) {
             return
+        }
 
         val old = BaseUtil.fromJson<CreateCommentSaga>(String(Base64.getDecoder().decode(saga.contextJson)))
         val updated = old.copy(debitedCost = command.payload.cost)
@@ -84,19 +87,21 @@ class CreateCommentOrchestratorReplierV2(
     // 3번 - 임시 댓글 생성
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.CreateCommentReplyV2.SUCCESS", "SOCIAL_SERVICE.CreateCommentReplyV2.FAIL"],
-        groupId = "social-orchestrator"
+        groupId = "social-orchestrator",
     )
     fun onCreateCommentReply(message: String) {
         println("onCreateCommentReply")
         val command = BaseUtil.fromJson<EventWrapper<CreateCommentReply>>(String(Base64.getDecoder().decode(message)))
 
-        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "CreateCommentReplyV2"))
+        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "CreateCommentReplyV2")) {
             return
+        }
 
         val saga = sagaInstanceRepo.findById(command.sagaId).orElseThrow()
 
-        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.CREATE_COMMENT.name)
+        if (saga.sagaStatus != SagaStatus.RUNNING || saga.step != CreateCommentSagaStep.CREATE_COMMENT.name) {
             return
+        }
 
         val old = BaseUtil.fromJson<CreateCommentSaga>(String(Base64.getDecoder().decode(saga.contextJson)))
         val updated = old.copy(commentId = command.payload.commentId)
@@ -108,7 +113,6 @@ class CreateCommentOrchestratorReplierV2(
             sagaInstanceRepo.save(saga)
 
             orchestrator.publishCommentCreatedEvent(saga, causationId = command.eventId)
-
         } else {
             saga.step = CreateCommentSagaStep.REFUND_BALANCE.name
             saga.sagaStatus = SagaStatus.COMPENSATING
@@ -121,19 +125,21 @@ class CreateCommentOrchestratorReplierV2(
     // 보상 메서드 - 사용자 잔액 반환
     @KafkaListener(
         topics = ["ACCOUNT_SERVICE.RefundBalanceReplyV2.SUCCESS", "ACCOUNT_SERVICE.RefundBalanceReplyV2.FAIL"],
-        groupId = "social-orchestrator"
+        groupId = "social-orchestrator",
     )
     fun onRefundBalanceReply(message: String) {
         println("onRefundBalanceReply")
         val command = BaseUtil.fromJson<EventWrapper<RefundBalanceReply>>(String(Base64.getDecoder().decode(message)))
 
-        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "RefundBalanceReplyV2"))
+        if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "RefundBalanceReplyV2")) {
             return
+        }
 
         val saga = sagaInstanceRepo.findById(command.sagaId).orElseThrow()
 
-        if (saga.sagaStatus != SagaStatus.COMPENSATING || saga.step != CreateCommentSagaStep.REFUND_BALANCE.name)
+        if (saga.sagaStatus != SagaStatus.COMPENSATING || saga.step != CreateCommentSagaStep.REFUND_BALANCE.name) {
             return
+        }
 
         if (command.payload.success) {
             saga.sagaStatus = SagaStatus.COMPENSATED

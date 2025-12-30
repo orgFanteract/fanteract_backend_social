@@ -1,13 +1,12 @@
 package fanteract.social.dto.client
 
+import com.fasterxml.jackson.databind.JsonNode
 import fanteract.social.enumerate.AlarmStatus
 import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.EventStatus
-import com.fasterxml.jackson.databind.JsonNode
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.WriteStatus
 import java.time.Instant
-
 
 data class CreateAlarmRequest(
     val userId: Long, // 알림을 던지는 주체

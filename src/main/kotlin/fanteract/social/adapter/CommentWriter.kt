@@ -14,22 +14,22 @@ import java.time.LocalDateTime
 
 @Component
 class CommentWriter(
-    private val commentRepo: CommentRepo
+    private val commentRepo: CommentRepo,
 ) {
-
     fun create(
         boardId: Long,
         userId: Long,
         content: String,
         riskLevel: RiskLevel,
-        status: Status = Status.ACTIVATED
+        status: Status = Status.ACTIVATED,
     ): Comment {
-        val comment = Comment(
-            boardId = boardId,
-            userId = userId,
-            content = content,
-            riskLevel = riskLevel,
-        )
+        val comment =
+            Comment(
+                boardId = boardId,
+                userId = userId,
+                content = content,
+                riskLevel = riskLevel,
+            )
 
         comment.status = status
         return commentRepo.save(comment)
@@ -37,25 +37,29 @@ class CommentWriter(
 
     fun update(
         commentId: Long,
-        content: String
+        content: String,
     ) {
-        val comment = commentRepo.findById(commentId)
-            .orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
+        val comment =
+            commentRepo
+                .findById(commentId)
+                .orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
 
         comment.content = content
         commentRepo.save(comment)
     }
 
     fun delete(commentId: Long) {
-        val comment = commentRepo.findById(commentId)
-            .orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
+        val comment =
+            commentRepo
+                .findById(commentId)
+                .orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
 
         comment.status = Status.DELETED
         commentRepo.save(comment)
     }
 
     fun deleteAll(commentList: List<Comment>) {
-        for (comment in commentList){
+        for (comment in commentList) {
             comment.status = Status.DELETED
             commentRepo.save(comment)
         }
@@ -69,7 +73,10 @@ class CommentWriter(
         commentRepo.deleteById(commentId)
     }
 
-    fun updateRiskLevel(comment: Comment, riskLevel: RiskLevel) {
+    fun updateRiskLevel(
+        comment: Comment,
+        riskLevel: RiskLevel,
+    ) {
         comment.riskLevel = riskLevel
         commentRepo.save(comment)
     }
@@ -81,7 +88,7 @@ class CommentWriter(
         isAlarmToBoardUserSent: Boolean = comment.isAlarmToBoardUserSent,
         isAlarmToCommentUsersSent: Boolean = comment.isAlarmToCommentUsersSent,
         isCompleted: Boolean = comment.isCompleted,
-    ){
+    ) {
         comment.isFiltered = isFiltered
         comment.isActivePointApplied = isActivePointApplied
         comment.isAlarmToBoardUserSent = isAlarmToBoardUserSent
@@ -93,25 +100,21 @@ class CommentWriter(
 
     fun updateStatus(
         comment: Comment,
-        status: Status
-    ){
+        status: Status,
+    ) {
         comment.status = status
         commentRepo.save(comment)
     }
 
     @Transactional
-    fun tryAcquirePostProcess(commentId: Long): Int{
-        return commentRepo.tryAcquirePostProcess(commentId)
-    }
+    fun tryAcquirePostProcess(commentId: Long): Int = commentRepo.tryAcquirePostProcess(commentId)
 
     @Transactional
-    fun releasePostProcessSuccess(commentId: Long): Int {
-        return commentRepo.releasePostProcessSuccess(commentId)
-    }
+    fun releasePostProcessSuccess(commentId: Long): Int = commentRepo.releasePostProcessSuccess(commentId)
 
     @Transactional
-    fun releasePostProcessFail(commentId: Long, error: String): Int {
-        return commentRepo.releasePostProcessFail(commentId, error)
-    }
-
+    fun releasePostProcessFail(
+        commentId: Long,
+        error: String,
+    ): Int = commentRepo.releasePostProcessFail(commentId, error)
 }

@@ -18,35 +18,41 @@ class CommentHeartWriter(
     private val commentHeartRepo: CommentHeartRepo,
     private val kafkaTemplate: KafkaTemplate<String, String>,
 ) {
-
     fun create(
         userId: Long,
         commentId: Long,
-        status: Status = Status.ACTIVATED
+        status: Status = Status.ACTIVATED,
     ): CommentHeart {
-        val commentHeart = CommentHeart(
-            userId = userId,
-            commentId = commentId,
-        )
+        val commentHeart =
+            CommentHeart(
+                userId = userId,
+                commentId = commentId,
+            )
 
         commentHeart.status = status
 
         return commentHeartRepo.save(commentHeart)
     }
 
-    fun deleteByUserIdAndCommentId(userId: Long, commentId: Long) {
+    fun deleteByUserIdAndCommentId(
+        userId: Long,
+        commentId: Long,
+    ) {
         commentHeartRepo.deleteByUserIdAndCommentId(userId, commentId)
     }
 
-    fun delete(heart: CommentHeart){
+    fun delete(heart: CommentHeart) {
         commentHeartRepo.delete(heart)
     }
 
-    fun deleteAll(heartList: List<CommentHeart>){
+    fun deleteAll(heartList: List<CommentHeart>) {
         commentHeartRepo.deleteAll(heartList)
     }
 
-    fun updateStatus(commentHeart: CommentHeart, status: Status) {
+    fun updateStatus(
+        commentHeart: CommentHeart,
+        status: Status,
+    ) {
         commentHeart.status = status
         commentHeartRepo.save(commentHeart)
     }

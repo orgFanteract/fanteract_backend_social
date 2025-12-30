@@ -1,11 +1,11 @@
 package fanteract.social.api.outer
 
-import io.swagger.v3.oas.annotations.Operation
-import jakarta.servlet.http.HttpServletRequest
 import fanteract.social.annotation.LoginRequired
 import fanteract.social.config.JwtParser
 import fanteract.social.dto.outer.*
 import fanteract.social.service.BoardService
+import io.swagger.v3.oas.annotations.Operation
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController
 class BoardAPI(
     private val boardService: BoardService,
 ) {
-    
     @Operation(summary = "게시글 생성")
     @PostMapping()
     fun createBoard(
@@ -36,7 +35,7 @@ class BoardAPI(
     }
 
     // 사용자 작성 게시글 조회
-    
+
     @Operation(summary = "사용자 소유 게시글 조회")
     @GetMapping("/user")
     fun readBoardByUserId(
@@ -56,10 +55,11 @@ class BoardAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadBoardListOuterResponse> {
-        val response = boardService.readBoard(
-            page = page,
-            size = size
-        )
+        val response =
+            boardService.readBoard(
+                page = page,
+                size = size,
+            )
 
         return ResponseEntity.ok().body(response)
     }
@@ -81,7 +81,7 @@ class BoardAPI(
     fun updateBoard(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
-        @RequestBody updateBoardOuterRequest: UpdateBoardOuterRequest
+        @RequestBody updateBoardOuterRequest: UpdateBoardOuterRequest,
     ): ResponseEntity<Void> {
         boardService.updateBoard(boardId, userId, updateBoardOuterRequest)
 

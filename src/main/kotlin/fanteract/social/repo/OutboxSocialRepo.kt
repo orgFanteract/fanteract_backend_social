@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface OutboxSocialRepo: JpaRepository<OutboxSocial, Long> {
+interface OutboxSocialRepo : JpaRepository<OutboxSocial, Long> {
     fun findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(
         status: OutboxStatus,
         methodName: String,
@@ -23,11 +23,11 @@ interface OutboxSocialRepo: JpaRepository<OutboxSocial, Long> {
     @Modifying
     @Query(
         "update OutboxSocial o " +
-                "set o.outboxStatus = :status " +
-                "where o.outboxId in :ids"
+            "set o.outboxStatus = :status " +
+            "where o.outboxId in :ids",
     )
     fun bulkUpdateStatus(
         @Param("status") status: OutboxStatus,
-        @Param("ids") ids: List<Long>
+        @Param("ids") ids: List<Long>,
     ): Int
 }

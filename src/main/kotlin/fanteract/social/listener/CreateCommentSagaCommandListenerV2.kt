@@ -70,7 +70,7 @@ class CreateCommentSagaCommandListenerV2(
                     boardId = payload.boardId,
                     userId = payload.userId,
                     content = payload.content,
-                    riskLevel = RiskLevel.UNKNOWN
+                    riskLevel = RiskLevel.UNKNOWN,
                 )
 
             messageAdapter.sendEventUsingBroker(
@@ -80,13 +80,14 @@ class CreateCommentSagaCommandListenerV2(
                 causationId = causationId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.SUCCESS,
-                payload = CreateCommentReply(
-                    sagaId = sagaId,
-                    eventId = causationId,
-                    success = true,
-                    commentId = comment.commentId,
-                    riskLevel = payload.riskLevel,
-                ),
+                payload =
+                    CreateCommentReply(
+                        sagaId = sagaId,
+                        eventId = causationId,
+                        success = true,
+                        commentId = comment.commentId,
+                        riskLevel = payload.riskLevel,
+                    ),
             )
         } catch (e: Exception) {
             messageAdapter.sendEventUsingBroker(

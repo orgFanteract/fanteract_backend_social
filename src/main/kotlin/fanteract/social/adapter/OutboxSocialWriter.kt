@@ -10,29 +10,26 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class OutboxSocialWriter (
+class OutboxSocialWriter(
     private val outboxSocialRepo: OutboxSocialRepo,
 ) {
     fun bulkUpdateStatus(
         status: OutboxStatus,
-        idList: List<Long>
-    ): Int {
-        return outboxSocialRepo.bulkUpdateStatus(status, idList)
-    }
+        idList: List<Long>,
+    ): Int = outboxSocialRepo.bulkUpdateStatus(status, idList)
 
     fun create(
         topic: String, // 구독 대상
         content: String, // 전송 내용
         outboxStatus: OutboxStatus, // 상태
         methodName: String,
-    ): OutboxSocial{
-        return outboxSocialRepo.save(
+    ): OutboxSocial =
+        outboxSocialRepo.save(
             OutboxSocial(
                 topic = topic,
                 content = content,
                 outboxStatus = outboxStatus,
                 methodName = methodName,
-            )
+            ),
         )
-    }
 }

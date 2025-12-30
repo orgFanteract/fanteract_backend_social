@@ -35,16 +35,16 @@ class CommentEventService(
         boardId: Long,
         userId: Long,
         createCommentOuterRequest: CreateCommentOuterRequest,
-    ){
+    ) {
         // init
         println("event! = validateBoardStatusEvent")
         val sagaId = "SAGA-${UUID.randomUUID()}"
 
         // exec
-        try{
+        try {
             val board = boardReader.findById(boardId)
 
-            if (board.riskLevel == RiskLevel.BLOCK || board.status == Status.DELETED){
+            if (board.riskLevel == RiskLevel.BLOCK || board.status == Status.DELETED) {
                 throw ExceptionType.withType(MessageType.NOT_EXIST)
             }
 
@@ -56,11 +56,12 @@ class CommentEventService(
                 causationId = null,
                 topicService = TopicService.ACCOUNT_SERVICE,
                 eventStatus = EventStatus.PROCESS,
-                payload = DebitIfEnoughEventDto(
-                    userId = userId,
-                    boardId = boardId,
-                    content = createCommentOuterRequest.content,
-                ),
+                payload =
+                    DebitIfEnoughEventDto(
+                        userId = userId,
+                        boardId = boardId,
+                        content = createCommentOuterRequest.content,
+                    ),
             )
 
             // send success message
@@ -71,13 +72,14 @@ class CommentEventService(
                 causationId = null,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.SUCCESS,
-                payload = ValidateBoardStatusDto(
-                    boardId = boardId,
-                    userId = userId,
-                    content = createCommentOuterRequest.content
-                ),
+                payload =
+                    ValidateBoardStatusDto(
+                        boardId = boardId,
+                        userId = userId,
+                        content = createCommentOuterRequest.content,
+                    ),
             )
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // send fail message
             messageAdapter.sendEventUsingBroker(
                 sagaId = sagaId,
@@ -86,21 +88,21 @@ class CommentEventService(
                 causationId = null,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.FAIL,
-                payload = CreateCommentEventCompensateDto(
-                    userId = null,
-                    refundCost = null,
-                    refundActivePoint = null,
-                    commentId = null,
-                )
+                payload =
+                    CreateCommentEventCompensateDto(
+                        userId = null,
+                        refundCost = null,
+                        refundActivePoint = null,
+                        commentId = null,
+                    ),
             )
         }
-
     }
-    
+
     /** 3번 **/
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.filterCommentContentEvent.PROCESS"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
     fun filterCommentContentEvent(message: String) {
         println("event! = filterCommentContentEvent")
@@ -124,13 +126,14 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.PROCESS,
-                payload = CreateCommentEventDto(
-                    boardId = response.payload.boardId,
-                    userId = response.payload.userId,
-                    content = response.payload.content,
-                    riskLevel = riskLevel,
-                    cost = response.payload.cost
-                ),
+                payload =
+                    CreateCommentEventDto(
+                        boardId = response.payload.boardId,
+                        userId = response.payload.userId,
+                        content = response.payload.content,
+                        riskLevel = riskLevel,
+                        cost = response.payload.cost,
+                    ),
             )
 
             // send success message
@@ -141,9 +144,9 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.SUCCESS,
-                payload = response.payload
+                payload = response.payload,
             )
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // send fail message
             messageAdapter.sendEventUsingBroker(
                 sagaId = response.sagaId,
@@ -152,21 +155,23 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.FAIL,
-                payload = CreateCommentEventCompensateDto(
-                    userId = response.payload.userId,
-                    refundCost = response.payload.cost,
-                    refundActivePoint = null,
-                    commentId = null,
-                )
+                payload =
+                    CreateCommentEventCompensateDto(
+                        userId = response.payload.userId,
+                        refundCost = response.payload.cost,
+                        refundActivePoint = null,
+                        commentId = null,
+                    ),
             )
         }
     }
+
     /** 4번 **/
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createCommentEvent.PROCESS"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    fun createCommentEvent(message: String){
+    fun createCommentEvent(message: String) {
         println("event! = createCommentEvent")
 
         // receive message
@@ -189,12 +194,13 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.ACCOUNT_SERVICE,
                 eventStatus = EventStatus.PROCESS,
-                payload = UpdateActivePointEventDto(
-                    boardId = response.payload.boardId,
-                    userId = response.payload.userId,
-                    commentId = comment.commentId,
-                    cost = response.payload.cost
-                ),
+                payload =
+                    UpdateActivePointEventDto(
+                        boardId = response.payload.boardId,
+                        userId = response.payload.userId,
+                        commentId = comment.commentId,
+                        cost = response.payload.cost,
+                    ),
             )
 
             // send success message
@@ -205,9 +211,9 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.SUCCESS,
-                payload = response.payload
+                payload = response.payload,
             )
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // send fail message
             messageAdapter.sendEventUsingBroker(
                 sagaId = response.sagaId,
@@ -216,22 +222,23 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.FAIL,
-                payload = CreateCommentEventCompensateDto(
-                    userId = response.payload.userId,
-                    refundCost = response.payload.cost,
-                    refundActivePoint = null,
-                    commentId = null,
-                )
+                payload =
+                    CreateCommentEventCompensateDto(
+                        userId = response.payload.userId,
+                        refundCost = response.payload.cost,
+                        refundActivePoint = null,
+                        commentId = null,
+                    ),
             )
         }
     }
-    
+
+    /** 6번 **/
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createAlarmToBoardUserEvent.PROCESS"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    /** 6번 **/
-    fun createAlarmToBoardUserEvent(message: String){
+    fun createAlarmToBoardUserEvent(message: String) {
         println("event! = createAlarmToBoardUserEvent")
 
         // receive message
@@ -251,7 +258,7 @@ class CommentEventService(
                         alarmStatus = AlarmStatus.CREATED,
                     ),
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createAlarm"
+                methodName = "createAlarm",
             )
 
             // send message
@@ -262,13 +269,14 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.PROCESS,
-                payload = CreateAlarmToOtherCommentUserEventDto(
-                    userId = response.payload.userId,
-                    contentId = response.payload.boardId,
-                    cost = response.payload.cost,
-                    activePoint = response.payload.activePoint,
-                    commentId = response.payload.commentId,
-                ),
+                payload =
+                    CreateAlarmToOtherCommentUserEventDto(
+                        userId = response.payload.userId,
+                        contentId = response.payload.boardId,
+                        cost = response.payload.cost,
+                        activePoint = response.payload.activePoint,
+                        commentId = response.payload.commentId,
+                    ),
             )
 
             // send success message
@@ -281,7 +289,7 @@ class CommentEventService(
                 eventStatus = EventStatus.SUCCESS,
                 payload = response.payload,
             )
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // send fail message
             messageAdapter.sendEventUsingBroker(
                 sagaId = response.sagaId,
@@ -290,24 +298,23 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.FAIL,
-                payload = CreateCommentEventCompensateDto(
-                    userId = response.payload.userId,
-                    refundCost = response.payload.cost,
-                    refundActivePoint = response.payload.activePoint,
-                    commentId = response.payload.commentId,
-                )
+                payload =
+                    CreateCommentEventCompensateDto(
+                        userId = response.payload.userId,
+                        refundCost = response.payload.cost,
+                        refundActivePoint = response.payload.activePoint,
+                        commentId = response.payload.commentId,
+                    ),
             )
         }
-
     }
-
 
     /** 7번 **/
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createAlarmToOtherCommentUserEvent.PROCESS"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    fun createAlarmToOtherCommentUserEvent(message: String){
+    fun createAlarmToOtherCommentUserEvent(message: String) {
         println("event! = createAlarmToOtherCommentUserEvent")
 
         // receive message
@@ -315,7 +322,7 @@ class CommentEventService(
 
         try {
             // exec
-            val commentUserIdList = commentReader.findByBoardId(response.payload.contentId).map {it.userId}.distinct()
+            val commentUserIdList = commentReader.findByBoardId(response.payload.contentId).map { it.userId }.distinct()
 
             messageAdapter.sendMessageUsingBroker(
                 message =
@@ -327,7 +334,7 @@ class CommentEventService(
                         alarmStatus = AlarmStatus.CREATED,
                     ),
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createAlarmList"
+                methodName = "createAlarmList",
             )
 
             // send success message
@@ -340,7 +347,7 @@ class CommentEventService(
                 eventStatus = EventStatus.SUCCESS,
                 payload = response.payload,
             )
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // send fail message
             messageAdapter.sendEventUsingBroker(
                 sagaId = response.sagaId,
@@ -349,12 +356,13 @@ class CommentEventService(
                 causationId = response.eventId,
                 topicService = TopicService.SOCIAL_SERVICE,
                 eventStatus = EventStatus.FAIL,
-                payload = CreateCommentEventCompensateDto(
-                    userId = response.payload.userId,
-                    refundCost = response.payload.cost,
-                    refundActivePoint = response.payload.activePoint,
-                    commentId = response.payload.commentId,
-                )
+                payload =
+                    CreateCommentEventCompensateDto(
+                        userId = response.payload.userId,
+                        refundCost = response.payload.cost,
+                        refundActivePoint = response.payload.activePoint,
+                        commentId = response.payload.commentId,
+                    ),
             )
         }
 

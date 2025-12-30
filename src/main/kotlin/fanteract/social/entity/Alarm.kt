@@ -1,5 +1,8 @@
 package fanteract.social.entity
 
+import fanteract.social.entity.constant.BaseEntity
+import fanteract.social.enumerate.AlarmStatus
+import fanteract.social.enumerate.ContentType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -7,13 +10,10 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import fanteract.social.entity.constant.BaseEntity
-import fanteract.social.enumerate.AlarmStatus
-import fanteract.social.enumerate.ContentType
 
 @Entity
 @Table(name = "alarms")
-class Alarm (
+class Alarm(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val alarmId: Long = 0L,
@@ -24,4 +24,4 @@ class Alarm (
     val contentType: ContentType,
     @Enumerated(EnumType.STRING)
     val alarmStatus: AlarmStatus,
-): BaseEntity()
+) : BaseEntity()

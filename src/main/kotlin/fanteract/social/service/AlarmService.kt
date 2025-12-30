@@ -21,25 +21,27 @@ class AlarmService(
         page: Int,
         size: Int,
     ): ReadAlarmListOuterResponse {
-        val pageable = PageRequest.of(
-            page,
-            size,
-            Sort.by(Sort.Direction.DESC, "createdAt") // 최신 알람부터
-        )
+        val pageable =
+            PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt"), // 최신 알람부터
+            )
 
         val alarmPage = alarmReader.findByTargetUserId(targetUserId, pageable)
         val alarmContent = alarmPage.content
 
-        val contents = alarmContent.map { alarm ->
-            ReadAlarmOuterResponse(
-                alarmId = alarm.alarmId,
-                userId = alarm.userId,
-                targetUserId = alarm.targetUserId,
-                contentId = alarm.contentId,
-                contentType = alarm.contentType,
-                alarmStatus = alarm.alarmStatus,
-            )
-        }
+        val contents =
+            alarmContent.map { alarm ->
+                ReadAlarmOuterResponse(
+                    alarmId = alarm.alarmId,
+                    userId = alarm.userId,
+                    targetUserId = alarm.targetUserId,
+                    contentId = alarm.contentId,
+                    contentType = alarm.contentType,
+                    alarmStatus = alarm.alarmStatus,
+                )
+            }
 
         return ReadAlarmListOuterResponse(
             contents = contents,
@@ -47,13 +49,13 @@ class AlarmService(
             size = size,
             totalElements = alarmPage.totalElements,
             totalPages = alarmPage.totalPages,
-            hasNext = alarmPage.hasNext()
+            hasNext = alarmPage.hasNext(),
         )
     }
 
     fun create(
         createAlarmInnerRequest: CreateAlarmInnerRequest,
-        userId: Long
+        userId: Long,
     ): CreateAlarmInnerResponse {
         val response =
             alarmWriter.create(
@@ -66,5 +68,4 @@ class AlarmService(
 
         return CreateAlarmInnerResponse(response.alarmId)
     }
-
 }
