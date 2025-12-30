@@ -14,6 +14,9 @@ enum class MessageType(
     INVALID_ACTION("INVALID_ACTION", "잘못된 행동입니다", HttpStatus.BAD_REQUEST),
     INVALID_CONNECTED_SERVICE("INVALID_CONNECTED_SERVICE", "연결된 서비스에 오류가 있습니다", HttpStatus.BAD_REQUEST),
     BASIC_EXCEPTION("BASIC_EXCEPTION", "테스트를 위한 강제 예외 처리", HttpStatus.BAD_REQUEST),
+    INVALID_ACCESS_RESOURCE("INVALID_ACCESS_RESOURCE", "대상 서비스에 접근할 수 없습니다", HttpStatus.BAD_REQUEST),
+    CALL_NOT_PERMITTED("CALL_NOT_PERMITTED", "해당 접근은 OPEN 상태입니다", HttpStatus.BAD_REQUEST),
+    OTHER_EXCEPTION("OTHER_EXCEPTION", "모호한 예외입니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
 
     fun getCode(): String = this.code

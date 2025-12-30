@@ -23,21 +23,18 @@ class HeartAPI(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<CreateHeartInBoardOuterResponse> {
-        
         val response = heartService.createHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().body(response)
     }
 
     // 게시글 좋아요 취소
-    
     @Operation(summary = "게시글 좋아요 해제")
     @DeleteMapping("/{boardId}/board")
     fun deleteHeartInBoard(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable boardId: Long,
     ): ResponseEntity<Void> {
-        
         heartService.deleteHeartInBoard(boardId, userId)
 
         return ResponseEntity.ok().build()
@@ -56,7 +53,6 @@ class HeartAPI(
     }
 
     // 게시글 좋아요 취소
-    
     @Operation(summary = "코멘트 좋아요 해제")
     @DeleteMapping("/{commentId}/comment")
     fun deleteHeartInComment(

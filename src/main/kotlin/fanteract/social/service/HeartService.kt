@@ -59,7 +59,7 @@ class HeartService(
 
         // 사용자 비용 검증 및 차감
         try {
-            val debitRes = accountClient.debitBalanceIfEnough(userId, Balance.HEART.cost)
+            val debitRes = accountClient.debitBalanceIfEnough2(userId, Balance.HEART.cost)
 
             if (debitRes.response == 0) {
                 boardHeartWriter.delete(boardHeart)
@@ -146,7 +146,7 @@ class HeartService(
 
         // 사용자 비용 검증 및 차감
         try {
-            val debitRes = accountClient.debitBalanceIfEnough(userId, Balance.HEART.cost)
+            val debitRes = accountClient.debitBalanceIfEnough2(userId, Balance.HEART.cost)
 
             if (debitRes.response == 0) {
                 commentHeartWriter.delete(commentHeart)

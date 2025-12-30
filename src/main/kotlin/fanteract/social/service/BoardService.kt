@@ -90,32 +90,12 @@ class BoardService(
             )
         }
 
-        val flag = false
+        // 값 누적
+        deltaInMemoryStorage.addDelta(userId, "boardCount", 1)
 
-        if (flag){
-            // 카프카 기반 쓰기 행위 메세지 전달
-            messageAdapter.sendMessageUsingBroker(
-                message =
-                    WriteCommentForUserRequest(
-                        userId = userId,
-                        writeStatus = WriteStatus.CREATED,
-                        riskLevel = riskLevel,
-                    ),
-                topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createBoardForUser"
-            )
+        if (riskLevel == RiskLevel.BLOCK) {
+            deltaInMemoryStorage.addDelta(userId, "restrictedBoardCount", -1)
         }
-
-        else {
-            // 값 누적
-            deltaInMemoryStorage.addDelta(userId, "boardCount", 1)
-
-            if (riskLevel == RiskLevel.BLOCK) {
-                deltaInMemoryStorage.addDelta(userId, "restrictedBoardCount", -1)
-            }
-        }
-
-
 
         // 결과 반환
         return CreateBoardOuterResponse(
