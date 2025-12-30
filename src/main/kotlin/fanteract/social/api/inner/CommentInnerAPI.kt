@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+
 @Hidden
 @RestController
 @RequestMapping("/internal/comments")
@@ -50,7 +51,7 @@ class CommentInnerAPI(
     @GetMapping("/{commentId}/exists")
     fun readExistsById(
         @PathVariable commentId: Long,
-    ): ResponseEntity<ReadCommentExistsInnerResponse>{
+    ): ResponseEntity<ReadCommentExistsInnerResponse> {
         val response = commentService.existsById(commentId)
 
         return ResponseEntity.ok().body(response)
@@ -59,7 +60,7 @@ class CommentInnerAPI(
     @GetMapping("/{commentId}")
     fun readById(
         @PathVariable commentId: Long,
-    ): ResponseEntity<ReadCommentDetailInnerResponse>{
+    ): ResponseEntity<ReadCommentDetailInnerResponse> {
         val response = commentService.findById(commentId)
 
         return ResponseEntity.ok().body(response)

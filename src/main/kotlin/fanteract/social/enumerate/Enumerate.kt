@@ -18,7 +18,7 @@ enum class WriteStatus {
     UPDATED,
 }
 
-enum class ChatroomJoinStatus{
+enum class ChatroomJoinStatus {
     JOIN,
     LEAVE,
 }
@@ -48,7 +48,7 @@ enum class Balance(
     HEART(1),
 }
 
-enum class ContentType{
+enum class ContentType {
     BOARD,
     COMMENT,
     CHAT,
@@ -56,14 +56,14 @@ enum class ContentType{
     COMMENT_HEART,
 }
 
-enum class OutboxStatus{
+enum class OutboxStatus {
     NEW,
     SENT,
     FAILED,
-    PROCESSING
+    PROCESSING,
 }
 
-enum class TopicService{
+enum class TopicService {
     SOCIAL_SERVICE,
     CONNECT_SERVICE,
     ACCOUNT_SERVICE,
@@ -81,5 +81,5 @@ enum class SagaStatus {
     SUCCEEDED,
     FAILED,
     COMPENSATING,
-    COMPENSATED
+    COMPENSATED,
 }

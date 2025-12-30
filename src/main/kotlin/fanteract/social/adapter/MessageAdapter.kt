@@ -29,7 +29,7 @@ class MessageAdapter(
 
         kafkaTemplate.send(
             "$topicService.$methodName",
-            baseContent
+            baseContent,
         )
     }
 
@@ -40,7 +40,7 @@ class MessageAdapter(
         causationId: String?,
         topicService: TopicService,
         eventStatus: EventStatus = EventStatus.PROCESS,
-        payload: T
+        payload: T,
     ) {
         val content =
             EventWrapper(
@@ -57,8 +57,7 @@ class MessageAdapter(
         println("topic = $topicService.$eventName.$eventStatus")
         kafkaTemplate.send(
             "$topicService.$eventName.$eventStatus",
-            baseContent
+            baseContent,
         )
-
     }
 }

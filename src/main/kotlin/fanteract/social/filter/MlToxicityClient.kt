@@ -1,11 +1,9 @@
 package fanteract.social.filter
 
-
 import org.springframework.stereotype.Component
 
 @Component
 class MlToxicityClient {
-
     /**
      * 0.0 ~ 1.0 사이의 점수를 반환한다고 가정
      * - 0.0: 전혀 공격적이지 않음

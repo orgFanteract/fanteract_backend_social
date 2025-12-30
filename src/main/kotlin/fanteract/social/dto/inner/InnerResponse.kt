@@ -1,7 +1,7 @@
 package fanteract.social.dto.inner
 
-import java.time.LocalDateTime
 import fanteract.social.enumerate.RiskLevel
+import java.time.LocalDateTime
 
 data class CreateAlarmInnerResponse(
     val alarmId: Long,
@@ -17,8 +17,6 @@ data class ReadBoardDetailInnerResponse(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )
-
-
 
 data class ReadBoardCountInnerResponse(
     val count: Long,
@@ -36,6 +34,7 @@ data class ReadBoardPageInnerResponse(
     val totalPages: Int,
     val hasNext: Boolean,
 )
+
 data class ReadBoardInnerResponse(
     val boardId: Long = 0L,
     var title: String,
@@ -62,7 +61,7 @@ data class ReadCommentPageInnerResponse(
 )
 
 data class ReadCommentListInnerResponse(
-    val contents: List<ReadCommentInnerResponse>
+    val contents: List<ReadCommentInnerResponse>,
 )
 
 data class ReadCommentInnerResponse(
@@ -92,5 +91,5 @@ data class BoardHeartInnerResponse(
 )
 
 data class BoardHeartListInnerResponse(
-    val content: List<BoardHeartInnerResponse>
+    val content: List<BoardHeartInnerResponse>,
 )

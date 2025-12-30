@@ -11,5 +11,5 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class SocialApplication
 
 fun main(args: Array<String>) {
-	runApplication<SocialApplication>(*args)
+    runApplication<SocialApplication>(*args)
 }

@@ -1,14 +1,14 @@
 package fanteract.social.interceptor
 
+import fanteract.social.annotation.LoginRequired
+import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.web.method.HandlerMethod
-import org.springframework.web.servlet.HandlerInterceptor
-import io.jsonwebtoken.Jwts
-import fanteract.social.annotation.LoginRequired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.web.method.HandlerMethod
+import org.springframework.web.servlet.HandlerInterceptor
 import kotlin.jvm.java
 import kotlin.text.startsWith
 import kotlin.text.substringAfter
@@ -21,7 +21,7 @@ class AuthInterceptor(
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        handler: Any
+        handler: Any,
     ): Boolean {
         if (handler !is HandlerMethod) return true
 
@@ -35,14 +35,18 @@ class AuthInterceptor(
         val secretKey = Keys.hmacShaKeyFor(jwtSecret.toByteArray())
 
         return try {
-            val subject = Jwts.parser().verifyWith(secretKey).build()
-                .parseSignedClaims(token).payload.subject
+            val subject =
+                Jwts
+                    .parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .payload.subject
 
             request.setAttribute("userId", subject)
 
             println("subject : $subject")
             true
-
         } catch (e: Exception) {
             unauthorized(response)
         }

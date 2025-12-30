@@ -5,7 +5,6 @@ import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import java.time.LocalDateTime
 
-
 data class ReadUserExistsInnerResponse(
     val exists: Boolean,
 )
@@ -34,7 +33,7 @@ data class ReadUserInnerResponse(
 )
 
 data class ReadUserListInnerResponse(
-    val users: List<ReadUserInnerResponse>
+    val users: List<ReadUserInnerResponse>,
 )
 
 data class UpdateActivePointRequest(

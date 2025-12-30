@@ -30,21 +30,23 @@ class OutboxPublishForCreateCommentScheduler(
         val targets =
             outboxSocialRepo.findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(
                 status = OutboxStatus.NEW,
-                methodName = "createComment"
+                methodName = "createComment",
             )
 
-        if (targets.isEmpty())
+        if (targets.isEmpty()) {
             return
+        }
 
         for (target in targets) {
             val updated =
                 outboxSocialRepo.bulkUpdateStatus(
                     status = OutboxStatus.PROCESSING,
-                    ids = listOf(target.outboxId)
+                    ids = listOf(target.outboxId),
                 )
 
-            if (updated == 0)
+            if (updated == 0) {
                 continue
+            }
 
             try {
                 val sender =
@@ -55,7 +57,7 @@ class OutboxPublishForCreateCommentScheduler(
                         commentId = sender.commentId,
                         boardId = sender.boardId,
                         userId = sender.userId,
-                        content = sender.content
+                        content = sender.content,
                     )
 
                 messageAdapter.sendEventUsingBroker(

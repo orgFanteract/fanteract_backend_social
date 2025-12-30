@@ -1,9 +1,9 @@
 package fanteract.social.api.outer
 
-import fanteract.social.service.CommentService
-import io.swagger.v3.oas.annotations.Operation
 import fanteract.social.dto.outer.*
 import fanteract.social.service.CommentEventService
+import fanteract.social.service.CommentService
+import io.swagger.v3.oas.annotations.Operation
 import org.springframework.data.domain.Window
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -31,16 +31,17 @@ class CommentAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadCommentPageOuterResponse> {
-        val response = commentService.readCommentsByBoardId(
-            boardId = boardId,
-            page = page,
-            size = size
-        )
+        val response =
+            commentService.readCommentsByBoardId(
+                boardId = boardId,
+                page = page,
+                size = size,
+            )
         return ResponseEntity.ok().body(response)
     }
 
     // 특정 유저의 코멘트 조회
-    
+
     @Operation(summary = "사용자가 작성한 코멘트 목록 조회")
     @GetMapping("/user")
     fun readCommentsByUserId(
@@ -48,12 +49,12 @@ class CommentAPI(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "10") size: Int,
     ): ResponseEntity<ReadCommentPageOuterResponse> {
-        
-        val response = commentService.readCommentsByUserId(
-            userId = userId,
-            page = page,
-            size = size
-        )
+        val response =
+            commentService.readCommentsByUserId(
+                userId = userId,
+                page = page,
+                size = size,
+            )
         return ResponseEntity.ok().body(response)
     }
 
@@ -67,11 +68,11 @@ class CommentAPI(
     ): ResponseEntity<CreateCommentOuterResponseV2> {
         // 사가 - 오케스트레이션 패턴 단축
         val sagaId =
-        commentService.createCommentWithOrchestrationV2(
-            boardId = boardId,
-            userId = userId,
-            createCommentOuterRequest = createCommentOuterRequest
-        )
+            commentService.createCommentWithOrchestrationV2(
+                boardId = boardId,
+                userId = userId,
+                createCommentOuterRequest = createCommentOuterRequest,
+            )
 
         // 사가 - 오케스트레이션 패턴
         /*commentService.createCommentWithOrchestration(
@@ -91,7 +92,7 @@ class CommentAPI(
     }
 
     // 코멘트 수정
-    
+
     @Operation(summary = "코멘트 수정")
     @PutMapping("/{commentId}")
     fun updateComment(
@@ -99,27 +100,25 @@ class CommentAPI(
         @PathVariable commentId: Long,
         @RequestBody updateCommentOuterRequest: UpdateCommentOuterRequest,
     ): ResponseEntity<Void> {
-        
         commentService.updateComment(
             commentId = commentId,
             userId = userId,
-            updateCommentOuterRequest = updateCommentOuterRequest
+            updateCommentOuterRequest = updateCommentOuterRequest,
         )
         return ResponseEntity.ok().build()
     }
 
     // 코멘트 삭제
-    
+
     @Operation(summary = "코멘트 삭제")
     @DeleteMapping("/{commentId}")
     fun deleteComment(
         @RequestHeader("X-User-Id") userId: Long,
         @PathVariable commentId: Long,
     ): ResponseEntity<Void> {
-        
         commentService.deleteComment(
             commentId = commentId,
-            userId = userId
+            userId = userId,
         )
         return ResponseEntity.ok().build()
     }

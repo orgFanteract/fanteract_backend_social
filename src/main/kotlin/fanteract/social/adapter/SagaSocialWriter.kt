@@ -20,8 +20,8 @@ class SagaSocialWriter(
         eventName: String,
         payload: String?,
         eventStatus: EventStatus,
-        isExec: Boolean = true
-    ){
+        isExec: Boolean = true,
+    ) {
         val sagaSocial =
             sagaSocialRepo.save(
                 SagaSocial(
@@ -30,8 +30,8 @@ class SagaSocialWriter(
                     eventName = eventName,
                     payload = payload,
                     eventStatus = eventStatus,
-                    isExec = isExec
-                )
+                    isExec = isExec,
+                ),
             )
     }
 }

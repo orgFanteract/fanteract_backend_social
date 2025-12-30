@@ -7,22 +7,22 @@ import com.fasterxml.jackson.module.kotlin.readValue
 
 class BaseUtil {
     companion object {
-        inline fun <reified T: Any> fromJson(json: String): T {
-            try{
+        inline fun <reified T : Any> fromJson(json: String): T {
+            try {
                 return jacksonObjectMapper().readValue<T>(json)
-            } catch(e: JsonProcessingException) {
+            } catch (e: JsonProcessingException) {
                 throw kotlin.RuntimeException("제이슨 파싱 실패")
             }
         }
-        fun toJson(any: Any): String{
+
+        fun toJson(any: Any): String {
             val objectMapper = ObjectMapper()
 
-            try{
+            try {
                 return objectMapper.writeValueAsString(any)
             } catch (e: JsonProcessingException) {
                 throw kotlin.RuntimeException("제이슨 직렬화 실패")
             }
         }
-
     }
 }

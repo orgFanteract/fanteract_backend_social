@@ -15,14 +15,15 @@ class OutboxSnapshotScheduler(
     private val outboxSocialRepo: OutboxSocialRepo,
     private val objectMapper: ObjectMapper,
 ) {
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 1000)
     fun flushToOutbox() {
         val snapshot = deltaStorage.snapshot()
 
         snapshot.forEach { (userId, fields) ->
-            val payload = objectMapper.writeValueAsString(
-                MyPageDeltaEvent(userId = userId, deltas = fields)
-            )
+            val payload =
+                objectMapper.writeValueAsString(
+                    MyPageDeltaEvent(userId = userId, deltas = fields),
+                )
 
             // 아웃 박스 저장
             outboxSocialRepo.save(
@@ -30,8 +31,8 @@ class OutboxSnapshotScheduler(
                     content = payload,
                     topic = "account.mypagtarget.delta",
                     outboxStatus = OutboxStatus.NEW,
-                    methodName = "readMyPage"
-                )
+                    methodName = "readMyPage",
+                ),
             )
 
             // 저장 성공 시 차감

@@ -1,8 +1,8 @@
 package fanteract.social.api.outer
 
-import io.swagger.v3.oas.annotations.Operation
 import fanteract.social.dto.outer.*
 import fanteract.social.service.HeartService
+import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 class HeartAPI(
     private val heartService: HeartService,
 ) {
-    
     @Operation(summary = "게시글 좋아요 생성")
     @PostMapping("/{boardId}/board")
     fun createHeartInBoard(

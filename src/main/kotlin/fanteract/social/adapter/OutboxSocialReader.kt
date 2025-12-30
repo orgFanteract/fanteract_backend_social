@@ -12,14 +12,10 @@ class OutboxSocialReader(
     fun findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(
         outboxStatus: OutboxStatus,
         methodName: String,
-    ): List<OutboxSocial>{
-        return outboxSocialRepo.findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(outboxStatus, methodName)
-    }
+    ): List<OutboxSocial> = outboxSocialRepo.findTop500ByOutboxStatusAndMethodNameOrderByCreatedAtAsc(outboxStatus, methodName)
 
     fun findAllByOutboxStatusAndMethodNameOrderByCreatedAtDesc(
         outboxStatus: OutboxStatus,
         methodName: String,
-    ): List<OutboxSocial> {
-        return outboxSocialRepo.findAllByOutboxStatusAndMethodNameOrderByCreatedAtDesc(outboxStatus, methodName)
-    }
+    ): List<OutboxSocial> = outboxSocialRepo.findAllByOutboxStatusAndMethodNameOrderByCreatedAtDesc(outboxStatus, methodName)
 }

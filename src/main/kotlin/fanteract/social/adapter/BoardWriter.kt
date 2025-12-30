@@ -18,20 +18,25 @@ class BoardWriter(
         userId: Long,
         riskLevel: RiskLevel,
     ): Board {
-        val board = boardRepo.save(
-            Board(
-                title = title,
-                content = content,
-                userId = userId,
-                riskLevel = riskLevel,
+        val board =
+            boardRepo.save(
+                Board(
+                    title = title,
+                    content = content,
+                    userId = userId,
+                    riskLevel = riskLevel,
+                ),
             )
-        )
 
         return board
     }
 
-    fun update(boardId: Long, title: String, content: String) {
-        val preBoard = boardRepo.findById(boardId).orElseThrow{ ExceptionType.withType(MessageType.NOT_EXIST)}
+    fun update(
+        boardId: Long,
+        title: String,
+        content: String,
+    ) {
+        val preBoard = boardRepo.findById(boardId).orElseThrow { ExceptionType.withType(MessageType.NOT_EXIST) }
 
         preBoard.title = title
         preBoard.content = content

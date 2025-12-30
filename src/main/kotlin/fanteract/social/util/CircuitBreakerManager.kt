@@ -14,13 +14,11 @@ class CircuitBreakerManager(
     open class Profile(
         val name: String,
         val parent: Profile? = null,
-
         val slidingWindowSize: Int? = null,
         val minimumNumberOfCalls: Int? = null,
         val failureRateThreshold: Float? = null,
         val waitDurationInOpenState: Duration? = null,
         val permittedNumberOfCallsInHalfOpenState: Int? = null,
-
         val recordExceptions: Set<Class<out Throwable>>? = null,
         val ignoreExceptions: Set<Class<out Throwable>>? = null,
     )
@@ -34,11 +32,12 @@ class CircuitBreakerManager(
             failureRateThreshold = 50f,
             waitDurationInOpenState = Duration.ofSeconds(10),
             permittedNumberOfCallsInHalfOpenState = 5,
-            recordExceptions = setOf(
-                java.io.IOException::class.java,
-                org.springframework.web.client.ResourceAccessException::class.java,
-                org.springframework.web.client.RestClientResponseException::class.java,
-            ),
+            recordExceptions =
+                setOf(
+                    java.io.IOException::class.java,
+                    org.springframework.web.client.ResourceAccessException::class.java,
+                    org.springframework.web.client.RestClientResponseException::class.java,
+                ),
             ignoreExceptions = emptySet(),
         )
 
@@ -48,6 +47,18 @@ class CircuitBreakerManager(
             name = "accountClient",
             parent = baseConfig,
             failureRateThreshold = 40f, // customize
+        )
+
+    val connectConfig =
+        Profile(
+            name = "connectConfig",
+            parent = baseConfig,
+        )
+
+    val socialConfig =
+        Profile(
+            name = "socialConfig",
+            parent = baseConfig,
         )
 
     // Profile → CircuitBreakerConfig 캐시
@@ -60,11 +71,12 @@ class CircuitBreakerManager(
     ) = registry.circuitBreaker(name, resolveConfig(profile))
 
     // Profile을 CircuitBreakerConfig로 변환
-    private fun resolveConfig(profile: Profile): CircuitBreakerConfig {
-        return configCache.computeIfAbsent(profile.name) {
+    private fun resolveConfig(profile: Profile): CircuitBreakerConfig =
+        configCache.computeIfAbsent(profile.name) {
             val resolved = resolveMerged(profile)
 
-            CircuitBreakerConfig.custom()
+            CircuitBreakerConfig
+                .custom()
                 .slidingWindowSize(resolved.slidingWindowSize!!)
                 .minimumNumberOfCalls(resolved.minimumNumberOfCalls!!)
                 .failureRateThreshold(resolved.failureRateThreshold!!)
@@ -73,10 +85,8 @@ class CircuitBreakerManager(
                 .apply {
                     resolved.recordExceptions?.let { recordExceptions(*it.toTypedArray()) }
                     resolved.ignoreExceptions?.let { ignoreExceptions(*it.toTypedArray()) }
-                }
-                .build()
+                }.build()
         }
-    }
 
     // 부모 → 자식 순으로 설정 병합
     private fun resolveMerged(profile: Profile): Profile {
@@ -85,14 +95,12 @@ class CircuitBreakerManager(
         return Profile(
             name = profile.name,
             parent = null,
-
             slidingWindowSize = profile.slidingWindowSize ?: p?.slidingWindowSize,
             minimumNumberOfCalls = profile.minimumNumberOfCalls ?: p?.minimumNumberOfCalls,
             failureRateThreshold = profile.failureRateThreshold ?: p?.failureRateThreshold,
             waitDurationInOpenState = profile.waitDurationInOpenState ?: p?.waitDurationInOpenState,
             permittedNumberOfCallsInHalfOpenState =
                 profile.permittedNumberOfCallsInHalfOpenState ?: p?.permittedNumberOfCallsInHalfOpenState,
-
             recordExceptions = profile.recordExceptions ?: p?.recordExceptions,
             ignoreExceptions = profile.ignoreExceptions ?: p?.ignoreExceptions,
         )

@@ -27,10 +27,10 @@ class EventConsumer(
 ) {
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createAlarm"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    fun consumeCreateAlarm(message: String){
-        //println("consumeCreateAlarm exec")
+    fun consumeCreateAlarm(message: String) {
+        // println("consumeCreateAlarm exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmRequest>>(decodedJson)
 
@@ -45,14 +45,14 @@ class EventConsumer(
 
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createAlarmList"],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    fun consumeCreateAlarmList(message: String){
-        //println("consumeCreateAlarmList exec")
+    fun consumeCreateAlarmList(message: String) {
+        // println("consumeCreateAlarmList exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmListRequest>>(decodedJson)
 
-        for (targetId in response.content.targetUserIdList){
+        for (targetId in response.content.targetUserIdList) {
             alarmWriter.create(
                 userId = response.content.userId,
                 targetUserId = targetId,
@@ -71,10 +71,10 @@ class EventConsumer(
             "SOCIAL_SERVICE.createCommentEvent.SUCCESS",
             "SOCIAL_SERVICE.createAlarmToBoardUserEvent.SUCCESS",
             "SOCIAL_SERVICE.createAlarmToOtherCommentUserEvent.SUCCESS",
-                 ],
-        groupId = "social-service"
+        ],
+        groupId = "social-service",
     )
-    fun consumeCreateCommentEventSuccess(message: String){
+    fun consumeCreateCommentEventSuccess(message: String) {
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapperForLog>(decodedJson)
 
@@ -99,10 +99,10 @@ class EventConsumer(
             "SOCIAL_SERVICE.createCommentEvent.FAIL",
             "SOCIAL_SERVICE.createAlarmToBoardUserEvent.FAIL",
             "SOCIAL_SERVICE.createAlarmToOtherCommentUserEvent.FAIL",
-                 ],
-        groupId = "social-service"
+        ],
+        groupId = "social-service",
     )
-    fun consumeCreateCommentEventFail(message: String){
+    fun consumeCreateCommentEventFail(message: String) {
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapperForLog>(decodedJson)
 
@@ -130,9 +130,9 @@ class EventConsumer(
             "SOCIAL_SERVICE.createAlarmToBoardUserEvent.FAIL",
             "SOCIAL_SERVICE.createAlarmToOtherCommentUserEvent.FAIL",
         ],
-        groupId = "compensate-service"
+        groupId = "compensate-service",
     )
-    fun createCommentEventCompensateManager(message: String){
+    fun createCommentEventCompensateManager(message: String) {
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapper<CreateCommentEventCompensateDto>>(decodedJson)
 
@@ -184,9 +184,9 @@ class EventConsumer(
         topics = [
             "SOCIAL_SERVICE.createComment.createCommentEvent.COMPENSATE",
         ],
-        groupId = "social-service"
+        groupId = "social-service",
     )
-    fun createCommentEventCompensate(message: String){
+    fun createCommentEventCompensate(message: String) {
         println("compensate : createCommentEventCompensate")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapper<CreateCommentEventCompensateDto>>(decodedJson)
@@ -197,12 +197,12 @@ class EventConsumer(
                 eventName = "createCommentEvent",
                 eventStatus = EventStatus.COMPENSATE,
             )
-        ){
+        ) {
             return
         }
 
         // 보상 로직 적용
-        if (response.payload.commentId != null){
+        if (response.payload.commentId != null) {
             commentWriter.deleteById(response.payload.commentId)
         } else {
             throw ExceptionType.withType(MessageType.NOT_EXIST)
@@ -224,5 +224,4 @@ class EventConsumer(
             isExec = true,
         )
     }
-
 }

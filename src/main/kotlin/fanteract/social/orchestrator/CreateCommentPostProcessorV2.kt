@@ -1,7 +1,6 @@
 package fanteract.social.orchestrator
 
 import fanteract.social.adapter.*
-import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.dto.client.*
 import fanteract.social.entity.Comment
 import fanteract.social.enumerate.ActivePoint
@@ -10,6 +9,7 @@ import fanteract.social.enumerate.ContentType
 import fanteract.social.enumerate.RiskLevel
 import fanteract.social.enumerate.Status
 import fanteract.social.enumerate.TopicService
+import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.util.BaseUtil
 import fanteract.social.util.DeltaInMemoryStorage
 import org.springframework.kafka.annotation.KafkaListener
@@ -28,10 +28,9 @@ class CreateCommentPostProcessorV2(
     private val messageAdapter: MessageAdapter,
     private val deltaInMemoryStorage: DeltaInMemoryStorage,
 ) {
-
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.CommentCreatedEventV2.SUCCESS"],
-        groupId = "social-postprocessor"
+        groupId = "social-postprocessor",
     )
     fun onCommentCreatedEvent(message: String) {
         println("onCommentCreatedEvent")
@@ -53,21 +52,22 @@ class CreateCommentPostProcessorV2(
         }
     }
 
-    @Scheduled(fixedDelay = 300_000)
+    @Scheduled(fixedDelay = 1000)
     fun retryIncompleteOrStuckComments() {
-        println("retryIncompleteOrStuckComments")
         val stuckBefore = LocalDateTime.now().minusMinutes(5)
 
         val targets = commentReader.findIncompleteOrStuckComments(stuckBefore)
-        if (targets.isEmpty())
+        if (targets.isEmpty()) {
             return
+        }
 
         for (comment in targets) {
             val commentId = comment.commentId
 
             // 동시 재처리 방지 락 (이미 누가 잡고 있으면 skip)
-            if (commentWriter.tryAcquirePostProcess(commentId) == 0)
+            if (commentWriter.tryAcquirePostProcess(commentId) == 0) {
                 continue
+            }
 
             try {
                 processOneComment(commentId, true) // 기존 로직 재사용
@@ -75,23 +75,27 @@ class CreateCommentPostProcessorV2(
             } catch (e: Exception) {
                 commentWriter.releasePostProcessFail(
                     commentId,
-                    e.message ?: e::class.java.simpleName
+                    e.message ?: e::class.java.simpleName,
                 )
             }
         }
     }
 
-    private fun processOneComment(commentId: Long, isTrue: Boolean = false) {
+    private fun processOneComment(
+        commentId: Long,
+        isTrue: Boolean = false,
+    ) {
         println("processOneComment")
         // 0) 현재 상태 1회 로드
         var comment = commentReader.findById(commentId)
 
         // 댓글 정합성 검증
         if (!comment.isFiltered) {
-            val riskLevel = profanityFilterService.checkProfanityAndUpdateAbusePoint(
-                userId = comment.userId,
-                text = comment.content,
-            )
+            val riskLevel =
+                profanityFilterService.checkProfanityAndUpdateAbusePoint(
+                    userId = comment.userId,
+                    text = comment.content,
+                )
             commentWriter.updateRiskLevel(comment, riskLevel)
 
             if (riskLevel == RiskLevel.BLOCK) {
@@ -109,12 +113,13 @@ class CreateCommentPostProcessorV2(
         // 사용자 활동 점수 추가
         if (/*(isTrue || randomNumber(0.3)) &&*/ !comment.isActivePointApplied && comment.riskLevel != RiskLevel.BLOCK) {
             messageAdapter.sendMessageUsingBroker(
-                message = UpdateActivePointRequest(
-                    userId = comment.userId,
-                    activePoint = ActivePoint.COMMENT.point
-                ),
+                message =
+                    UpdateActivePointRequest(
+                        userId = comment.userId,
+                        activePoint = ActivePoint.COMMENT.point,
+                    ),
                 topicService = TopicService.ACCOUNT_SERVICE,
-                methodName = "updateActivePoint"
+                methodName = "updateActivePoint",
             )
 
             commentWriter.updateIdempotency(comment, isActivePointApplied = true)
@@ -130,15 +135,16 @@ class CreateCommentPostProcessorV2(
             val boardUserId = boardReader.findById(comment.boardId).userId
 
             messageAdapter.sendMessageUsingBroker(
-                message = CreateAlarmRequest(
-                    userId = comment.userId,
-                    targetUserId = boardUserId,
-                    contentType = ContentType.COMMENT,
-                    contentId = comment.boardId,
-                    alarmStatus = AlarmStatus.CREATED,
-                ),
+                message =
+                    CreateAlarmRequest(
+                        userId = comment.userId,
+                        targetUserId = boardUserId,
+                        contentType = ContentType.COMMENT,
+                        contentId = comment.boardId,
+                        alarmStatus = AlarmStatus.CREATED,
+                    ),
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createAlarm"
+                methodName = "createAlarm",
             )
 
             commentWriter.updateIdempotency(comment, isAlarmToBoardUserSent = true)
@@ -147,20 +153,23 @@ class CreateCommentPostProcessorV2(
 
         // 4) 알림 2
         if (!comment.isAlarmToCommentUsersSent) {
-            val targets = commentReader.findByBoardId(comment.boardId)
-                .map { it.userId }
-                .distinct()
+            val targets =
+                commentReader
+                    .findByBoardId(comment.boardId)
+                    .map { it.userId }
+                    .distinct()
 
             messageAdapter.sendMessageUsingBroker(
-                message = CreateAlarmListRequest(
-                    userId = comment.userId,
-                    targetUserIdList = targets,
-                    contentType = ContentType.COMMENT,
-                    contentId = comment.boardId,
-                    alarmStatus = AlarmStatus.CREATED,
-                ),
+                message =
+                    CreateAlarmListRequest(
+                        userId = comment.userId,
+                        targetUserIdList = targets,
+                        contentType = ContentType.COMMENT,
+                        contentId = comment.boardId,
+                        alarmStatus = AlarmStatus.CREATED,
+                    ),
                 topicService = TopicService.SOCIAL_SERVICE,
-                methodName = "createAlarmList"
+                methodName = "createAlarmList",
             )
 
             commentWriter.updateIdempotency(comment, isAlarmToCommentUsersSent = true)
@@ -179,7 +188,10 @@ class CreateCommentPostProcessorV2(
         }
     }
 
-    fun addWriteCountDelta(comment: Comment, riskLevel: RiskLevel) {
+    fun addWriteCountDelta(
+        comment: Comment,
+        riskLevel: RiskLevel,
+    ) {
         deltaInMemoryStorage.addDelta(comment.userId, "commentCount", 1)
 
         if (comment.riskLevel == RiskLevel.BLOCK) {

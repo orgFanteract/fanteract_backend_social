@@ -12,55 +12,62 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface BoardRepo : JpaRepository<Board, Long> {
-    @Query("""
+    @Query(
+        """
         SELECT b FROM Board b
         WHERE b.userId = :userId
         AND b.status = 'ACTIVATED'
         AND b.riskLevel <> 'BLOCK'
-    """)
+    """,
+    )
     fun findByUserId(
         @Param("userId") userId: Long,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Board>
 
-
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(b)
         FROM Board b
         WHERE b.userId = :userId
         AND b.status = 'ACTIVATED'
-    """)
+    """,
+    )
     fun countByUserId(
-        @Param("userId") userId: Long
+        @Param("userId") userId: Long,
     ): Long
 
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(b)
         FROM Board b
         WHERE b.userId = :userId
           AND b.riskLevel = :riskLevel
           AND b.status = 'ACTIVATED'
-    """)
+    """,
+    )
     fun countByUserIdAndRiskLevel(
         @Param("userId") userId: Long,
-        @Param("riskLevel") riskLevel: RiskLevel
+        @Param("riskLevel") riskLevel: RiskLevel,
     ): Long
 
-    @Query("""
+    @Query(
+        """
         SELECT b
         FROM Board b
         WHERE b.userId = :userId
           AND b.riskLevel = :riskLevel
           AND b.status = 'ACTIVATED'
-    """)
+    """,
+    )
     fun findByUserAndRiskLevel(
         @Param("userId") userId: Long,
         @Param("riskLevel") riskLevel: RiskLevel,
-        pageable: PageRequest
+        pageable: PageRequest,
     ): Page<Board>
 
     fun findAllByRiskLevelNot(
         riskLevel: RiskLevel,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Board>
 }

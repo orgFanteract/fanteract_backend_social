@@ -8,7 +8,7 @@ import java.util.UUID
 
 data class MessageWrapper<T>(
     val methodName: String,
-    val content: T
+    val content: T,
 )
 
 data class EventWrapper<T>(
@@ -18,7 +18,7 @@ data class EventWrapper<T>(
     val causationId: String? = null,
     val occurredAt: String = Instant.now().toString(),
     val eventStatus: EventStatus,
-    val payload: T
+    val payload: T,
 )
 
 data class EventWrapperForLog(
@@ -28,7 +28,7 @@ data class EventWrapperForLog(
     val causationId: String? = null,
     val occurredAt: String = Instant.now().toString(),
     val eventStatus: EventStatus,
-    val payload: JsonNode?
+    val payload: JsonNode?,
 )
 
 data class DebitIfEnoughEventDto(
@@ -65,7 +65,6 @@ data class UpdateActivePointEventDto(
     val cost: Int,
 )
 
-
 data class CreateAlarmToBoardUserEventDto(
     val userId: Long,
     val boardId: Long,
@@ -86,7 +85,7 @@ data class CreateCommentEventCompensateDto(
     val userId: Long?,
     val refundCost: Int?,
     val refundActivePoint: Int?,
-    val commentId: Long?
+    val commentId: Long?,
 )
 
 data class MyPageDeltaEvent(
@@ -97,44 +96,159 @@ data class MyPageDeltaEvent(
 )
 
 // command & reply
-data class ValidateBoardStatusCommand(val boardId: Long)
-data class ValidateBoardStatusReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class ValidateBoardStatusCommand(
+    val boardId: Long,
+)
 
-data class DebitBalanceCommand(val boardId: Long, val userId: Long, val content: String, val cost: Int)
-data class DebitBalanceReply(val sagaId: String, val eventId: String, val success: Boolean, val cost: Int?)
+data class ValidateBoardStatusReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
 
-data class FilterContentCommand(val boardId: Long, val userId: Long, val content: String)
-data class FilterContentReply(val sagaId: String, val eventId: String, val success: Boolean, val riskLevel: RiskLevel?)
+data class DebitBalanceCommand(
+    val boardId: Long,
+    val userId: Long,
+    val content: String,
+    val cost: Int,
+)
 
-data class CreateCommentCommand(val boardId: Long, val userId: Long, val content: String, val riskLevel: RiskLevel = RiskLevel.UNKNOWN)
-data class CreateCommentReply(val sagaId: String, val eventId: String, val success: Boolean, val commentId: Long?, val riskLevel: RiskLevel?)
+data class DebitBalanceReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+    val cost: Int?,
+)
 
-data class UpdateActivePointCommand(val userId: Long, val point: Int)
-data class UpdateActivePointReply(val sagaId: String, val eventId: String, val success: Boolean, val point: Int)
+data class FilterContentCommand(
+    val boardId: Long,
+    val userId: Long,
+    val content: String,
+)
 
-data class CreateAlarmsToCommentUserCommand(val boardId: Long, val userId: Long)
-data class CreateAlarmsToCommentUserReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class FilterContentReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+    val riskLevel: RiskLevel?,
+)
 
-data class CreateAlarmsToBoardUserCommand(val boardId: Long, val userId: Long)
-data class CreateAlarmsToBoardUserReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class CreateCommentCommand(
+    val boardId: Long,
+    val userId: Long,
+    val content: String,
+    val riskLevel: RiskLevel = RiskLevel.UNKNOWN,
+)
 
-data class CreateAlarmsCommand(val boardId: Long, val userId: Long, val commentId: Long)
-data class CreateAlarmsReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class CreateCommentReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+    val commentId: Long?,
+    val riskLevel: RiskLevel?,
+)
 
-data class UpdateMyPageCounterCommand(val userId: Long, val type: String, val delta: Int, val restrictedDelta: Int)
-data class UpdateMyPageCounterReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class UpdateActivePointCommand(
+    val userId: Long,
+    val point: Int,
+)
 
-data class RefundBalanceCommand(val userId: Long, val cost: Int)
-data class RefundBalanceReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class UpdateActivePointReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+    val point: Int,
+)
 
-data class RemovePendingCommentCommand(val userId: Long, val cost: Int)
-data class RemovePendingCommentReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class CreateAlarmsToCommentUserCommand(
+    val boardId: Long,
+    val userId: Long,
+)
 
-data class RollbackActivePointCommand(val userId: Long, val point: Int)
-data class RollbackActivePointReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class CreateAlarmsToCommentUserReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
 
-data class DeleteCommentCommand(val commentId: Long)
-data class DeleteCommentReply(val sagaId: String, val eventId: String, val success: Boolean)
+data class CreateAlarmsToBoardUserCommand(
+    val boardId: Long,
+    val userId: Long,
+)
+
+data class CreateAlarmsToBoardUserReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class CreateAlarmsCommand(
+    val boardId: Long,
+    val userId: Long,
+    val commentId: Long,
+)
+
+data class CreateAlarmsReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class UpdateMyPageCounterCommand(
+    val userId: Long,
+    val type: String,
+    val delta: Int,
+    val restrictedDelta: Int,
+)
+
+data class UpdateMyPageCounterReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class RefundBalanceCommand(
+    val userId: Long,
+    val cost: Int,
+)
+
+data class RefundBalanceReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class RemovePendingCommentCommand(
+    val userId: Long,
+    val cost: Int,
+)
+
+data class RemovePendingCommentReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class RollbackActivePointCommand(
+    val userId: Long,
+    val point: Int,
+)
+
+data class RollbackActivePointReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
+
+data class DeleteCommentCommand(
+    val commentId: Long,
+)
+
+data class DeleteCommentReply(
+    val sagaId: String,
+    val eventId: String,
+    val success: Boolean,
+)
 
 data class CreateCommentSaga(
     val boardId: Long? = null,
