@@ -58,6 +58,9 @@ dependencies {
 
     // kafka
     implementation("org.springframework.kafka:spring-kafka")
+
+    // eureka
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 }
 
 kotlin {
@@ -81,4 +84,10 @@ tasks.named("check") {
 
 ktlint {
     version.set("1.7.0")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.1")
+    }
 }

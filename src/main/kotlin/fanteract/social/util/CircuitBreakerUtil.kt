@@ -3,18 +3,64 @@ package fanteract.social.util
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import org.springframework.stereotype.Component
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class CircuitBreakerUtil(
     private val manager: CircuitBreakerManager,
 ) {
+    private val nameCache = ConcurrentHashMap<String, String>()
+
     fun <T> circuitBreaker(
-        name: String = UUID.randomUUID().toString(), // key
+        name: String? = null,
         profile: CircuitBreakerManager.Profile = manager.baseConfig, // config
         block: () -> T,
     ): CircuitBreakerCall<T> {
-        val cb = manager.circuitBreaker(name, profile)
+        // 클래스-메서드-파라미터 형식으로 이름 구축
+        val resolvedName = name ?: resolveAutoName(profile)
+
+        val cb = manager.circuitBreaker(resolvedName, profile)
         return CircuitBreakerCall(execute = { cb.executeSupplier(block) })
+    }
+
+    // 불러온 클래스 및 메서드 네임 가공
+    private fun resolveAutoName(profile: CircuitBreakerManager.Profile): String {
+        val caller = findCallerFrame() ?: return "cb-${profile.name}-unknown"
+
+        val classFqcn = caller.className
+        val className = classFqcn.substringAfterLast(".")
+        val methodName = caller.methodName
+
+        val paramTypes = resolveParamTypes(classFqcn, methodName)
+        val paramSig = paramTypes.joinToString(",") { it.substringAfterLast(".") }
+
+        val signatureKey = "${profile.name}|$classFqcn|$methodName|$paramSig|"
+
+        return nameCache.computeIfAbsent(signatureKey) {
+            "cb-${profile.name}-$className-$methodName($paramSig)"
+        }
+    }
+
+    // 스택트레이스로부터 클래스 및 메서드 네임 불러오기
+    private fun findCallerFrame(): StackTraceElement? {
+        val utilClass = this::class.java.name
+        return Throwable().stackTrace.firstOrNull { e ->
+            e.className != utilClass && !e.className.startsWith("java.") && !e.className.startsWith("kotlin.")
+        }
+    }
+
+    // 파라미터 타입 불러오기
+    private fun resolveParamTypes(classFqcn: String, methodName: String): List<String> {
+        return try {
+            val clazz = Class.forName(classFqcn)
+
+            val methods = clazz.declaredMethods.filter { it.name == methodName }
+            val best = methods.minByOrNull { it.parameterCount } ?: return emptyList()
+
+            best.parameterTypes.map { it.name }
+        } catch (_: Throwable) {
+            emptyList()
+        }
     }
 }
 
