@@ -11,6 +11,7 @@ import fanteract.social.enumerate.TopicService
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.util.BaseUtil
+import mu.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.util.Base64
@@ -22,10 +23,11 @@ class CreateCommentSagaCommandListenerV2(
     private val boardReader: BoardReader,
     private val commentWriter: CommentWriter,
 ) {
+    private val log = KotlinLogging.logger {}
     // 1번 - 게시글 상태 검증
     @KafkaListener(topics = ["SOCIAL_SERVICE.ValidateBoardStatusCommandV2.PROCESS"], groupId = "social-service")
     fun onValidateBoardStatusCommand(message: String) {
-        println("onValidateBoardStatusCommand")
+        log.info{"onValidateBoardStatusCommand"}
         val command = BaseUtil.fromJson<EventWrapper<ValidateBoardStatusCommand>>(String(Base64.getDecoder().decode(message)))
         val (sagaId, causationId, payload) = Triple(command.sagaId, command.eventId, command.payload)
 
@@ -60,7 +62,7 @@ class CreateCommentSagaCommandListenerV2(
     // 3번 - 임시 댓글 생성
     @KafkaListener(topics = ["SOCIAL_SERVICE.CreateCommentPendingCommandV2.PROCESS"], groupId = "social-service")
     fun onCreateCommentPendingCommand(message: String) {
-        println("onCreateCommentPendingCommand")
+        log.info{"onCreateCommentPendingCommand"}
         val command = BaseUtil.fromJson<EventWrapper<CreateCommentCommand>>(String(Base64.getDecoder().decode(message)))
         val (sagaId, causationId, payload) = Triple(command.sagaId, command.eventId, command.payload)
 

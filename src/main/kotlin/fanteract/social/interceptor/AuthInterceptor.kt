@@ -13,16 +13,20 @@ import kotlin.jvm.java
 import kotlin.text.startsWith
 import kotlin.text.substringAfter
 import kotlin.text.toByteArray
+import mu.KotlinLogging
 
 @Component
 class AuthInterceptor(
     @Value($$"${jwt.secret}") private val jwtSecret: String,
 ) : HandlerInterceptor {
+    private val log = KotlinLogging.logger {}
+
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
         handler: Any,
     ): Boolean {
+
         if (handler !is HandlerMethod) return true
 
         val hasAnnotation = handler.getMethodAnnotation(LoginRequired::class.java) != null
@@ -44,8 +48,7 @@ class AuthInterceptor(
                     .payload.subject
 
             request.setAttribute("userId", subject)
-
-            println("subject : $subject")
+            log.info{"subject : $subject"}
             true
         } catch (e: Exception) {
             unauthorized(response)

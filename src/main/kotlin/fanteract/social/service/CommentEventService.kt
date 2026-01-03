@@ -17,6 +17,7 @@ import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.util.messageResolver
+import mu.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -30,14 +31,16 @@ class CommentEventService(
     private val commentWriter: CommentWriter,
     private val commentReader: CommentReader,
 ) {
+    private val log = KotlinLogging.logger {}
     /** 1번 **/
     fun validateBoardStatusEvent(
         boardId: Long,
         userId: Long,
         createCommentOuterRequest: CreateCommentOuterRequest,
     ) {
+
         // init
-        println("event! = validateBoardStatusEvent")
+        log.info{"event! = validateBoardStatusEvent"}
         val sagaId = "SAGA-${UUID.randomUUID()}"
 
         // exec
@@ -105,7 +108,7 @@ class CommentEventService(
         groupId = "social-service",
     )
     fun filterCommentContentEvent(message: String) {
-        println("event! = filterCommentContentEvent")
+        log.info{"event! = filterCommentContentEvent"}
 
         // receive message
         val response = messageResolver<FilterCommentContentEventDto>(message)
@@ -172,7 +175,7 @@ class CommentEventService(
         groupId = "social-service",
     )
     fun createCommentEvent(message: String) {
-        println("event! = createCommentEvent")
+        log.info{"event! = createCommentEvent"}
 
         // receive message
         val response = messageResolver<CreateCommentEventDto>(message)
@@ -239,7 +242,7 @@ class CommentEventService(
         groupId = "social-service",
     )
     fun createAlarmToBoardUserEvent(message: String) {
-        println("event! = createAlarmToBoardUserEvent")
+        log.info{"event! = createAlarmToBoardUserEvent"}
 
         // receive message
         val response = messageResolver<CreateAlarmToBoardUserEventDto>(message)
@@ -315,7 +318,7 @@ class CommentEventService(
         groupId = "social-service",
     )
     fun createAlarmToOtherCommentUserEvent(message: String) {
-        println("event! = createAlarmToOtherCommentUserEvent")
+        log.info{"event! = createAlarmToOtherCommentUserEvent"}
 
         // receive message
         val response = messageResolver<CreateAlarmToOtherCommentUserEventDto>(message)
@@ -367,6 +370,6 @@ class CommentEventService(
         }
 
         // end
-        println("end !")
+        log.info{"end !"}
     }
 }

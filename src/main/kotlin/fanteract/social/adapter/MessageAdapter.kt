@@ -5,6 +5,7 @@ import fanteract.social.dto.client.MessageWrapper
 import fanteract.social.enumerate.EventStatus
 import fanteract.social.enumerate.TopicService
 import fanteract.social.util.BaseUtil
+import mu.KotlinLogging
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.util.Base64
@@ -14,6 +15,7 @@ class MessageAdapter(
     private val kafkaTemplate: KafkaTemplate<String, String>,
     private val sagaSocialWriter: SagaSocialWriter,
 ) {
+    private val log = KotlinLogging.logger {}
     fun <T> sendMessageUsingBroker(
         message: T,
         topicService: TopicService,
@@ -54,7 +56,6 @@ class MessageAdapter(
 
         val baseContent = Base64.getEncoder().encodeToString(BaseUtil.toJson(content).toByteArray())
 
-        println("topic = $topicService.$eventName.$eventStatus")
         kafkaTemplate.send(
             "$topicService.$eventName.$eventStatus",
             baseContent,

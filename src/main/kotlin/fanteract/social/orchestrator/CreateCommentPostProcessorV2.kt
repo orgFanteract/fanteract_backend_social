@@ -12,6 +12,7 @@ import fanteract.social.enumerate.TopicService
 import fanteract.social.filter.ProfanityFilterService
 import fanteract.social.util.BaseUtil
 import fanteract.social.util.DeltaInMemoryStorage
+import mu.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -28,12 +29,13 @@ class CreateCommentPostProcessorV2(
     private val messageAdapter: MessageAdapter,
     private val deltaInMemoryStorage: DeltaInMemoryStorage,
 ) {
+    private val log = KotlinLogging.logger {}
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.CommentCreatedEventV2.SUCCESS"],
         groupId = "social-postprocessor",
     )
     fun onCommentCreatedEvent(message: String) {
-        println("onCommentCreatedEvent")
+        log.info{"onCommentCreatedEvent"}
 
         val decoded = String(Base64.getDecoder().decode(message))
         val payload = BaseUtil.fromJson<EventWrapper<CommentCreatedEvent>>(decoded).payload
@@ -85,7 +87,7 @@ class CreateCommentPostProcessorV2(
         commentId: Long,
         isTrue: Boolean = false,
     ) {
-        println("processOneComment")
+        log.info{"processOneComment"}
         // 0) 현재 상태 1회 로드
         var comment = commentReader.findById(commentId)
 

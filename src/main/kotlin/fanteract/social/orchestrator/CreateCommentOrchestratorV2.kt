@@ -26,6 +26,7 @@ import fanteract.social.repo.OutboxSocialRepo
 import fanteract.social.repo.SagaInboxRepository
 import fanteract.social.repo.SagaInstanceRepo
 import fanteract.social.util.BaseUtil
+import mu.KotlinLogging
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -41,13 +42,14 @@ class CreateCommentOrchestratorV2(
     private val outboxSocialWriter: OutboxSocialWriter,
     private val objectMapper: ObjectMapper,
 ) {
+    private val log = KotlinLogging.logger {}
     // 0번
     fun start(
         boardId: Long,
         userId: Long,
         req: CreateCommentOuterRequest,
     ): String {
-        println("start")
+        log.info{"start"}
         val sagaId = "SAGA-${UUID.randomUUID()}"
 
         val payload =
@@ -77,7 +79,7 @@ class CreateCommentOrchestratorV2(
         sagaId: String,
         boardId: Long,
     ) {
-        println("sendValidateBoardStatusCommand")
+        log.info{"sendValidateBoardStatusCommand"}
         messageAdapter.sendEventUsingBroker(
             sagaId = sagaId,
             eventId = "EVENT-${UUID.randomUUID()}",
@@ -94,7 +96,7 @@ class CreateCommentOrchestratorV2(
         saga: SagaInstance,
         causationId: String,
     ) {
-        println("sendUpdateDebitCommand")
+        log.info{"sendUpdateDebitCommand"}
         val content = decodeSaga(saga)
 
         messageAdapter.sendEventUsingBroker(
@@ -119,7 +121,7 @@ class CreateCommentOrchestratorV2(
         saga: SagaInstance,
         causationId: String,
     ) {
-        println("sendCreateCommentPendingCommand")
+        log.info{"sendCreateCommentPendingCommand"}
         val content = decodeSaga(saga)
 
         messageAdapter.sendEventUsingBroker(
@@ -143,7 +145,7 @@ class CreateCommentOrchestratorV2(
         saga: SagaInstance,
         causationId: String,
     ) {
-        println("sendRefundCommand")
+        log.info{"sendRefundCommand"}
         val content = decodeSaga(saga)
 
         messageAdapter.sendEventUsingBroker(
@@ -166,7 +168,7 @@ class CreateCommentOrchestratorV2(
         saga: SagaInstance,
         causationId: String,
     ) {
-        println("publishCommentCreatedEvent")
+        log.info{"publishCommentCreatedEvent"}
         val content = decodeSaga(saga)
 
         // 아웃박스 적용

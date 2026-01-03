@@ -7,6 +7,7 @@ import fanteract.social.orchestrator.CreateCommentOrchestratorV2
 import fanteract.social.orchestrator.CreateCommentSagaStep
 import fanteract.social.repo.SagaInstanceRepo
 import fanteract.social.util.BaseUtil
+import mu.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,13 +20,15 @@ class CreateCommentOrchestratorReplierV2(
     private val orchestrator: CreateCommentOrchestratorV2,
     private val sagaInboxWriter: SagaInboxWriter,
 ) {
+    private val log = KotlinLogging.logger {}
+
     // 1번 - 게시글 상태 검증
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.ValidateBoardStatusReplyV2.SUCCESS", "SOCIAL_SERVICE.ValidateBoardStatusReplyV2.FAIL"],
         groupId = "social-orchestrator",
     )
     fun onValidateBoardStatusReply(message: String) {
-        println("onValidateBoardStatusReplyV2")
+        log.info{"onValidateBoardStatusReplyV2"}
         val command = BaseUtil.fromJson<EventWrapper<ValidateBoardStatusReply>>(String(Base64.getDecoder().decode(message)))
 
         if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "ValidateBoardStatusReplyV2")) {
@@ -55,7 +58,7 @@ class CreateCommentOrchestratorReplierV2(
         groupId = "social-orchestrator",
     )
     fun onDebitReply(message: String) {
-        println("onDebitReplyV2")
+        log.info{"onDebitReplyV2"}
         val command = BaseUtil.fromJson<EventWrapper<DebitBalanceReply>>(String(Base64.getDecoder().decode(message)))
 
         if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "UpdateDebitReplyV2")) {
@@ -90,7 +93,7 @@ class CreateCommentOrchestratorReplierV2(
         groupId = "social-orchestrator",
     )
     fun onCreateCommentReply(message: String) {
-        println("onCreateCommentReply")
+        log.info{"onCreateCommentReply"}
         val command = BaseUtil.fromJson<EventWrapper<CreateCommentReply>>(String(Base64.getDecoder().decode(message)))
 
         if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "CreateCommentReplyV2")) {
@@ -128,7 +131,7 @@ class CreateCommentOrchestratorReplierV2(
         groupId = "social-orchestrator",
     )
     fun onRefundBalanceReply(message: String) {
-        println("onRefundBalanceReply")
+        log.info{"onRefundBalanceReply"}
         val command = BaseUtil.fromJson<EventWrapper<RefundBalanceReply>>(String(Base64.getDecoder().decode(message)))
 
         if (!sagaInboxWriter.acceptOnce(command.sagaId, command.eventId, "RefundBalanceReplyV2")) {
