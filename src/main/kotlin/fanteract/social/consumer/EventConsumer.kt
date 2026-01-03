@@ -9,6 +9,7 @@ import fanteract.social.enumerate.EventStatus
 import fanteract.social.exception.ExceptionType
 import fanteract.social.exception.MessageType
 import fanteract.social.util.BaseUtil
+import mu.KotlinLogging
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
@@ -25,12 +26,12 @@ class EventConsumer(
     private val commentWriter: CommentWriter,
     private val kafkaTemplate: KafkaTemplate<String, String>,
 ) {
+    private val log = KotlinLogging.logger {}
     @KafkaListener(
         topics = ["SOCIAL_SERVICE.createAlarm"],
         groupId = "social-service",
     )
     fun consumeCreateAlarm(message: String) {
-        // println("consumeCreateAlarm exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmRequest>>(decodedJson)
 
@@ -48,7 +49,6 @@ class EventConsumer(
         groupId = "social-service",
     )
     fun consumeCreateAlarmList(message: String) {
-        // println("consumeCreateAlarmList exec")
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<MessageWrapper<CreateAlarmListRequest>>(decodedJson)
 
@@ -78,7 +78,7 @@ class EventConsumer(
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapperForLog>(decodedJson)
 
-        println("success event : ${response.eventName}")
+        log.info{"success event : ${response.eventName}"}
 
         // 사가 트랜잭션 기록
         sagaSocialWriter.create(
@@ -106,7 +106,7 @@ class EventConsumer(
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapperForLog>(decodedJson)
 
-        println("fail event : ${response.eventName}")
+        log.info{"fail event : ${response.eventName}"}
 
         // 사가 트랜잭션 기록
         sagaSocialWriter.create(
@@ -136,7 +136,7 @@ class EventConsumer(
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapper<CreateCommentEventCompensateDto>>(decodedJson)
 
-        println("compensate event : ${response.eventName}")
+        log.info{"compensate event : ${response.eventName}"}
 
         // 에러 종류에 맞춰 보상 프로세스 메세지 전송
         when (response.eventName) {
@@ -187,7 +187,7 @@ class EventConsumer(
         groupId = "social-service",
     )
     fun createCommentEventCompensate(message: String) {
-        println("compensate : createCommentEventCompensate")
+        log.info{"compensate : createCommentEventCompensate"}
         val decodedJson = String(Base64.getDecoder().decode(message))
         val response = BaseUtil.fromJson<EventWrapper<CreateCommentEventCompensateDto>>(decodedJson)
 
