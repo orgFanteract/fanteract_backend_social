@@ -9,17 +9,20 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 
+// 환경 변수에 존재하는 매핑 데이터가 그대로 입력되면서 잘못된 url이 적용됨. 변경 요망
+
 @Component
 class AccountClient(
-    @Value("\${client.account-service.url}") userServiceUrl: String,
-    private val restClient: RestClient =
-        RestClient
-            .builder()
-            .baseUrl(userServiceUrl)
-            .build(),
+    @Value("\${client.account-service.url}")
+    accountServiceUrl: String,
+    restClientBuilder: RestClient.Builder,
     private val circuitBreakerUtil: CircuitBreakerUtil,
     private val circuitBreakerManager: CircuitBreakerManager,
 ) {
+    private val restClient: RestClient = restClientBuilder
+        .baseUrl(accountServiceUrl)
+        .build()
+
     fun updateAbusePoint(
         userId: Long,
         abusePoint: Int,
